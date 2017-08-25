@@ -1,0 +1,71 @@
+start1(): started
+start1(): after fork of child 3
+start1(): after fork of child 4
+start1(): performing join
+XXp1(): started
+XXp1(): arg = `XXp1'
+XXp1(): executing fork of first child
+XXp1(): fork1 of first child returned pid = 5
+XXp1(): zap'ing process with pid_z 
+XXp2(): started
+XXp2(): zap'ing process with pid_z 
+XXp3(): started
+PID	Parent	Priority	Status		# Kids	CPUtime	Name
+ -1	  -1	   -1		EMPTY		  0	   -1
+ 1	  -2	   6		READY		  0	   -1	sentinel
+ 2	  -2	   1		JOIN_BLOCK	  2	   24	start1
+ 3	  2	   3		ZAP_BLOCK	  1	   11	XXp1
+ 4	  2	   4		ZAP_BLOCK	  0	   8	XXp2
+ 5	  3	   5		RUNNING		  0	   -1	XXp3
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+XXp1(): after zap'ing process with pid_z, status = 0
+XXp1(): joining with first child
+XXp1(): join returned kid_pid = 5, status = 5
+start1(): exit status for child 3 is -3
+start1(): performing join
+XXp2(): after zap'ing process with pid_z, status = 0
+start1(): exit status for child 4 is 5
+All processes completed.

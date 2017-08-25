@@ -1,0 +1,71 @@
+start1(): started
+XXp1(): creating children
+XXp2(): started, pid = 4, calling blockMe
+XXp2(): started, pid = 5, calling blockMe
+XXp2(): started, pid = 6, calling blockMe
+XXp1(): creating zapper child
+XXp3(): started, pid = 7, calling zap on pid 5
+PID	Parent	Priority	Status		# Kids	CPUtime	Name
+ -1	  -1	   -1		EMPTY		  0	   -1
+ 1	  -2	   6		READY		  0	   -1	sentinel
+ 2	  -2	   1		JOIN_BLOCK	  1	   16	start1
+ 3	  2	   5		RUNNING		  4	   250	XXp1
+ 4	  3	   3		11		  0	   4	XXp2
+ 5	  3	   3		11		  0	   8	XXp2
+ 6	  3	   3		11		  0	   7	XXp2
+ 7	  3	   4		ZAP_BLOCK	  0	   4	XXp3
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+XXp1(): unblocking children
+XXp2(): pid = 4, after blockMe, result = 0
+XXp2(): pid = 4, isZapped() = 0
+XXp2(): pid = 5, after blockMe, result = -1
+XXp2(): pid = 5, isZapped() = 1
+XXp3(): after call to zap, result of zap = 0
+XXp2(): pid = 6, after blockMe, result = 0
+XXp2(): pid = 6, isZapped() = 0
+XXp1(): after unblocking 4, result = 0
+XXp1(): after unblocking 5, result = 0
+XXp1(): after unblocking 6, result = 0
+start1(): XXp1 has quit, join returned 3; start1 returning...
+All processes completed.

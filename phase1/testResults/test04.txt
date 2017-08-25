@@ -1,0 +1,134 @@
+start1(): started
+start1(): buf = `XXp2'
+start1(): after fork of child 3
+start1(): buf = `XXp3'
+start1(): after fork of child 4
+start1(): buf = `XXp4'
+start1(): after fork of child 5
+XXp1(): XXp2, started, pid = 3
+XXp1(): exitting, pid = 3
+start1(): after join of child 3, status = -3
+XXp1(): XXp3, started, pid = 4
+PID	Parent	Priority	Status		# Kids	CPUtime	Name
+ -1	  -1	   -1		EMPTY		  0	   -1
+ 1	  -2	   6		READY		  0	   -1	sentinel
+ 2	  -2	   1		JOIN_BLOCK	  2	   37	start1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ 4	  2	   3		RUNNING		  0	   -1	XXp1
+ 5	  2	   3		READY		  0	   -1	XXp1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+XXp1(): exitting, pid = 4
+start1(): after join of child 4, status = -4
+XXp1(): XXp4, started, pid = 5
+XXp1(): exitting, pid = 5
+start1(): after join of child 5, status = -5
+start1(): buf = `XXp2'
+start1(): after fork of child 6
+start1(): buf = `XXp3'
+start1(): after fork of child 7
+start1(): buf = `XXp4'
+start1(): after fork of child 8
+XXp1(): XXp2, started, pid = 6
+XXp1(): exitting, pid = 6
+start1(): after join of child 6, status = -6
+XXp1(): XXp3, started, pid = 7
+PID	Parent	Priority	Status		# Kids	CPUtime	Name
+ -1	  -1	   -1		EMPTY		  0	   -1
+ 1	  -2	   6		READY		  0	   -1	sentinel
+ 2	  -2	   1		JOIN_BLOCK	  2	   76	start1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ 7	  2	   3		RUNNING		  0	   -1	XXp1
+ 8	  2	   3		READY		  0	   -1	XXp1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+ -1	  -1	   -1		EMPTY		  0	   -1
+XXp1(): exitting, pid = 7
+start1(): after join of child 7, status = -7
+XXp1(): XXp4, started, pid = 8
+XXp1(): exitting, pid = 8
+start1(): after join of child 8, status = -8
+All processes completed.

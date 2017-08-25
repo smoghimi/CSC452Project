@@ -1,0 +1,20 @@
+start1(): started
+start1(): after fork of child 3
+start1(): after fork of child 4
+start1(): performing first join
+XXp1(): started
+XXp1(): arg = `XXp1'
+XXp1(): after fork of child 5
+XXp1(): performing first join at this point isZapped() returns: 0
+XXp2(): started
+XXp2(): arg = `XXp2'
+XXp2(): calling zap(3)
+XXp3(): started
+XXp3(): arg = `XXp3FromXXp1'
+XXp1(): exit status for child -1 is -3
+XXp1():at this point isZapped() returns: 1
+start1(): exit status for child 3 is -1
+start1(): performing second join
+XXp2(): return value of zap(3) is 0
+start1(): exit status for child 4 is -2
+All processes completed.

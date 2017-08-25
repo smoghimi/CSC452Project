@@ -1,0 +1,4 @@
+start1(): started
+start1(): after fork of child 3
+start1(): zapping myself, should cause abort, calling zap(2)
+zap(): process 2 tried to zap itself.  Halting...

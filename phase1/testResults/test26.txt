@@ -1,0 +1,16 @@
+start1(): started
+start1(): after fork of child 3
+start1(): after fork of child 4
+start1(): performing first join
+XXp1(): started
+XXp1(): arg = `XXp1'
+XXp1(): performing join with no children
+XXp1(): value returned by join is -2 expected value was -2
+start1(): exit status for child 3 is -1
+start1(): performing second join
+XXp2(): started
+XXp2(): arg = `XXp2'
+start1(): exit status for child 4 is -2
+start1(): performing third join, have no unjoined children
+start1(): value returned by join is -2 expected value was -2
+All processes completed.
