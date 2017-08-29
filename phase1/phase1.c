@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
+#include <usloss.h>
 #include "kernel.h"
 
 /* ------------------------- Prototypes ----------------------------------- */
@@ -20,6 +20,7 @@ extern int start1 (char *);
 void dispatcher(void);
 void launch();
 static void checkDeadlock();
+int mode();
 
 
 /* -------------------------- Globals ------------------------------------- */
@@ -127,8 +128,19 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
         USLOSS_Console("fork1(): creating process %s\n", name);
 
     // test if in kernel mode; halt if in user mode
+    int modeResult;
+    modeResult = mode();
+    if (!modeResult){
+      USLOSS_Console("fork1(): Must be in kernel mode to access fork1. Halting...\n");
+      USLOSS_Halt(1);
+    }
 
     // Return if stack size is too small
+    if (stacksize < USLOSS_MIN_STACK) {
+        USLOSS_Console("fork1(): Input stack size is too small. Halting...\n");
+        USLOSS_Halt(1);
+        return -2;
+    }
 
     // Is there room in the process table? What is the next PID?
 
@@ -164,6 +176,24 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
 
     return -1;  // -1 is not correct! Here to prevent warning.
 } /* fork1 */
+
+/* ------------------------------------------------------------------------
+   Name - mode
+   Purpose - Checks if the mode is in kernel or user
+   Parameters - none
+   Returns - 1 if kernel, 0 if user
+   Side Effects - none
+   ------------------------------------------------------------------------ */
+int mode() 
+{
+  //return ((int)USLOSS_PsrGet & (1 << 0)) != 0;
+  unsigned int mode;
+  mode = USLOSS_PsrGet();
+  if ((mode & (1<<0)) == 0)
+    return 0;
+  else
+    return 1;
+}
 
 /* ------------------------------------------------------------------------
    Name - launch
