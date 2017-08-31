@@ -1,0 +1,1 @@
+1. In phase.h is it okay to include <kernel.h>? That way I can call my dispatcher with the process in it?

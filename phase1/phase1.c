@@ -38,7 +38,7 @@ int processTableCounter = 0;
 int processIndex = 0;
 
 // Process lists
-static procPtr ReadyList;
+static readyList ReadyLists[READY_LISTS];
 
 // current process ID
 procPtr Current;
@@ -63,16 +63,19 @@ void startup(int argc, char *argv[])
     /* initialize the process table */
     if (DEBUG && debugflag)
         USLOSS_Console("startup(): initializing process table, ProcTable[]\n");
-    for (int i = 0; i < MAXPROC; i++)
-    {
-      procStruct emptyProcess;
-      ProcTable[i] = emptyProcess;
-    }
+    // for (int i = 0; i < MAXPROC; i++)
+    // {
+    //   procStruct emptyProcess;
+    //   ProcTable[i] = emptyProcess;
+    // }
 
     // Initialize the Ready list, etc.
     if (DEBUG && debugflag)
         USLOSS_Console("startup(): initializing the Ready list\n");
-    ReadyList = NULL;
+    //for (int i = 0; i < 5; i++){
+      //readyList a;
+      //ReadyLists[i] = readyList;
+    //}
 
     // Initialize the clock interrupt handler
 
@@ -142,16 +145,36 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
     // test if in kernel mode; halt if in user mode
     int modeResult;
     modeResult = mode();
-    if (!modeResult){
+    if (modeResult != 1){
       USLOSS_Console("fork1(): Must be in kernel mode to access fork1. Halting...\n");
       USLOSS_Halt(1);
+      return -1;
     }
 
     // Return if stack size is too small
     if (stacksize < USLOSS_MIN_STACK) {
-      USLOSS_Console("fork1(): Input stack size is too small. Halting...\n");
+      USLOSS_Console("fork1(): Process stack size is too small. Halting...\n");
       USLOSS_Halt(1);
       return -2;
+    }
+
+    // Return if priority is out of range
+    if (priority > 6 || priority < 0) {
+      USLOSS_Console("fork1(): Process priority out of range. Halting...\n");
+      USLOSS_Halt(1);
+      return -1;
+    }
+
+    // Return if Startfunc or name is null
+    if (startFunc == NULL) {
+      USLOSS_Console("fork1(): Process startFunc is null. Halting...\n");
+      USLOSS_Halt(1);
+      return -1;
+    }
+    if (name == NULL) {
+      USLOSS_Console("fork1(): Process name is null. Halting...\n");
+      USLOSS_Halt(1);
+      return -1;
     }
 
     // Is there room in the process table? What is the next PID?
@@ -181,11 +204,10 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
     }
     else
         strcpy(ProcTable[procSlot].startArg, arg);
-
+    ProcTable[procSlot].pid = nextPid++;
+    ProcTable[procSlot].priority = priority;
     ProcTable[procSlot].stackSize = stacksize;
-
-    printf("%d\n", stacksize);
-    printf("%d\n", USLOSS_MIN_STACK);
+    ProcTable[procSlot].stack = (char *)malloc(stacksize);
 
     // Initialize context for this process, but use launch function pointer for
     // the initial value of the process's program counter (PC)
@@ -196,12 +218,33 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
                        NULL,
                        launch);
 
+    Current = &ProcTable[procSlot];
+
+    // Add the process to the correct ready list
+    if (priority != 6) {
+      if (ReadyLists[priority].size == 0) {
+        ReadyLists[priority].head = Current;
+        ReadyLists[priority].size++;
+      }
+      else {
+        procPtr temp = ReadyLists[priority].head;
+        for (int i = 0; i < ReadyLists[priority].size; i++){
+          temp = temp->nextProcPtr;
+        }
+        temp->nextProcPtr = Current;
+        ReadyLists[priority].size++;
+      }
+    }
+
     // for future phase(s)
     p1_fork(ProcTable[procSlot].pid);
 
+    // Call dispatcher with the current process.
+    dispatcher();
+
     // More stuff to do here...
 
-    return nextPid++;  // -1 is not correct! Here to prevent warning.
+    return nextPid;  // -1 is not correct! Here to prevent warning.
 } /* fork1 */
 
 /* ------------------------------------------------------------------------
@@ -213,7 +256,8 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
    ------------------------------------------------------------------------ */
 int mode() 
 {
-  //return ((int)USLOSS_PsrGet & (1 << 0)) != 0;
+  //if (DEBUG && debugflag)
+  //  USLOSS_Console("mode(): Determining processor mode.\n");
   unsigned int mode;
   mode = USLOSS_PsrGet();
   if ((mode & (1<<0)) == 0)
@@ -264,6 +308,7 @@ void launch()
    ------------------------------------------------------------------------ */
 int join(int *status)
 {
+
     return -1;  // -1 is not correct! Here to prevent warning.
 } /* join */
 
@@ -295,8 +340,22 @@ void quit(int status)
    ----------------------------------------------------------------------- */
 void dispatcher(void)
 {
-    procPtr nextProcess = NULL;
+    if (DEBUG && debugflag) {
+      USLOSS_Console("dispatcher(): Dispatching process %s\n", Current->name);
+    }
 
+    procPtr nextProcess = NULL;
+    for (int i = 1; i < READY_LISTS; i++) {
+      if (ReadyLists[i].size > 0) {
+        nextProcess = ReadyLists[i].head;
+        ReadyLists[i].head = nextProcess->nextProcPtr;
+        ReadyLists[i].size--;
+        break;
+      }
+    }
+    if (nextProcess == NULL) {
+      nextProcess = Current;
+    }
     p1_switch(Current->pid, nextProcess->pid);
 } /* dispatcher */
 
@@ -324,6 +383,13 @@ int sentinel (char *dummy)
     }
 } /* sentinel */
 
+ /* ------------------------------------------------------------------------
+   Name - p1_switch
+   Purpose - The purpose of p1_switch is to switch the USLOSS context to a
+              new process.
+   Parameters - old pid, new pid
+   Returns - nothing
+   ----------------------------------------------------------------------- */   
 
 /* check to determine if deadlock has occurred... */
 static void checkDeadlock()

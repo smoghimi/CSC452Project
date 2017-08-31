@@ -1,9 +1,17 @@
 /* Patrick's DEBUG printing constant... */
 #define DEBUG 1
+#define READY_LISTS 6
 
 typedef struct procStruct procStruct;
 
 typedef struct procStruct * procPtr;
+
+typedef struct readyList readyList;
+
+struct readyList {
+  procPtr   head;
+  int       size;
+};
 
 struct procStruct {
    procPtr         nextProcPtr;
