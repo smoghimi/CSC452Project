@@ -31,6 +31,12 @@ int debugflag = 1;
 // the process table
 procStruct ProcTable[MAXPROC];
 
+// How many processes are currently in the process table
+int processTableCounter = 0;
+
+// Index of process table to set next process in. -1 if process table is full
+int processIndex = 0;
+
 // Process lists
 static procPtr ReadyList;
 
@@ -57,6 +63,11 @@ void startup(int argc, char *argv[])
     /* initialize the process table */
     if (DEBUG && debugflag)
         USLOSS_Console("startup(): initializing process table, ProcTable[]\n");
+    for (int i = 0; i < MAXPROC; i++)
+    {
+      procStruct emptyProcess;
+      ProcTable[i] = emptyProcess;
+    }
 
     // Initialize the Ready list, etc.
     if (DEBUG && debugflag)
@@ -64,6 +75,7 @@ void startup(int argc, char *argv[])
     ReadyList = NULL;
 
     // Initialize the clock interrupt handler
+
 
     // startup a sentinel process
     if (DEBUG && debugflag)
@@ -125,7 +137,7 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
     int procSlot = -1;
 
     if (DEBUG && debugflag)
-        USLOSS_Console("fork1(): creating process %s\n", name);
+      USLOSS_Console("fork1(): creating process %s\n", name);
 
     // test if in kernel mode; halt if in user mode
     int modeResult;
@@ -137,17 +149,27 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
 
     // Return if stack size is too small
     if (stacksize < USLOSS_MIN_STACK) {
-        USLOSS_Console("fork1(): Input stack size is too small. Halting...\n");
-        USLOSS_Halt(1);
-        return -2;
+      USLOSS_Console("fork1(): Input stack size is too small. Halting...\n");
+      USLOSS_Halt(1);
+      return -2;
     }
 
     // Is there room in the process table? What is the next PID?
+    if (processTableCounter >= MAXPROC) {
+      USLOSS_Console("fork1(): Process table is full. Halting...\n");
+      USLOSS_Halt(1);
+      return -1;
+    } 
+    else {
+      procSlot = processIndex++;
+      processTableCounter++;
+    }
 
     // fill-in entry in process table */
     if ( strlen(name) >= (MAXNAME - 1) ) {
         USLOSS_Console("fork1(): Process name is too long.  Halting...\n");
         USLOSS_Halt(1);
+        return -1;
     }
     strcpy(ProcTable[procSlot].name, name);
     ProcTable[procSlot].startFunc = startFunc;
@@ -159,6 +181,11 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
     }
     else
         strcpy(ProcTable[procSlot].startArg, arg);
+
+    ProcTable[procSlot].stackSize = stacksize;
+
+    printf("%d\n", stacksize);
+    printf("%d\n", USLOSS_MIN_STACK);
 
     // Initialize context for this process, but use launch function pointer for
     // the initial value of the process's program counter (PC)
@@ -174,7 +201,7 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
 
     // More stuff to do here...
 
-    return -1;  // -1 is not correct! Here to prevent warning.
+    return nextPid++;  // -1 is not correct! Here to prevent warning.
 } /* fork1 */
 
 /* ------------------------------------------------------------------------
