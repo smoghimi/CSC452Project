@@ -19,6 +19,7 @@ int sentinel (char *);
 extern int start1 (char *);
 void dispatcher(void);
 void launch();
+void clockHandler();
 static void checkDeadlock();
 int mode();
 
@@ -72,13 +73,9 @@ void startup(int argc, char *argv[])
     // Initialize the Ready list, etc.
     if (DEBUG && debugflag)
         USLOSS_Console("startup(): initializing the Ready list\n");
-    //for (int i = 0; i < 5; i++){
-      //readyList a;
-      //ReadyLists[i] = readyList;
-    //}
 
     // Initialize the clock interrupt handler
-
+    USLOSS_IntVec[USLOSS_CLOCK_INT] = clockHandler;
 
     // startup a sentinel process
     if (DEBUG && debugflag)
@@ -184,7 +181,10 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
       return -1;
     } 
     else {
-      procSlot = processIndex++;
+      while (ProcTable[nextPid % MAXPROC].priority != 0) {
+        nextPid++;
+      }
+      procSlot = nextPid%MAXPROC;
       processTableCounter++;
     }
 
@@ -212,28 +212,29 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
     // Initialize context for this process, but use launch function pointer for
     // the initial value of the process's program counter (PC)
 
+    Current = &ProcTable[procSlot];
+
     USLOSS_ContextInit(&(ProcTable[procSlot].state),
                        ProcTable[procSlot].stack,
                        ProcTable[procSlot].stackSize,
                        NULL,
                        launch);
 
-    Current = &ProcTable[procSlot];
-
     // Add the process to the correct ready list
-    if (priority != 6) {
-      if (ReadyLists[priority].size == 0) {
-        ReadyLists[priority].head = Current;
-        ReadyLists[priority].size++;
+    // since ReadyLists goes from 0-5 we need to subtract 1 from the priority
+    int adjustedPriority;
+    adjustedPriority = priority-1;
+    if (ReadyLists[adjustedPriority].size == 0) {
+      ReadyLists[adjustedPriority].head = Current;
+      ReadyLists[adjustedPriority].size++;
+    }
+    else {
+      procPtr temp = ReadyLists[adjustedPriority].head;
+      for (int i = 0; i < ReadyLists[adjustedPriority].size; i++){
+        temp = temp->nextProcPtr;
       }
-      else {
-        procPtr temp = ReadyLists[priority].head;
-        for (int i = 0; i < ReadyLists[priority].size; i++){
-          temp = temp->nextProcPtr;
-        }
-        temp->nextProcPtr = Current;
-        ReadyLists[priority].size++;
-      }
+      temp->nextProcPtr = Current;
+      ReadyLists[adjustedPriority].size++;
     }
 
     // for future phase(s)
@@ -282,6 +283,14 @@ void launch()
         USLOSS_Console("launch(): started\n");
 
     // Enable interrupts
+    unsigned int mode;
+    mode = USLOSS_PsrGet();
+    mode = mode | (1<<1);
+    mode = USLOSS_PsrSet(mode);
+    if (mode == USLOSS_ERR_INVALID_PSR){
+      USLOSS_Console("launch(): Invalid PSR. Halting...\n");
+      USLOSS_Halt(1);
+    }
 
     // Call the function passed to fork1, and capture its return value
     result = Current->startFunc(Current->startArg);
@@ -345,7 +354,7 @@ void dispatcher(void)
     }
 
     procPtr nextProcess = NULL;
-    for (int i = 1; i < READY_LISTS; i++) {
+    for (int i = 0; i < READY_LISTS; i++) {
       if (ReadyLists[i].size > 0) {
         nextProcess = ReadyLists[i].head;
         ReadyLists[i].head = nextProcess->nextProcPtr;
@@ -357,8 +366,28 @@ void dispatcher(void)
       nextProcess = Current;
     }
     p1_switch(Current->pid, nextProcess->pid);
+
+    // Enable interrupts
+    unsigned int mode;
+    mode = USLOSS_PsrGet();
+    mode = mode | (1<<1);
+    mode = USLOSS_PsrSet(mode);
+    if (Current->priority == 6){
+    USLOSS_ContextSwitch(NULL, &nextProcess->state);
+    }
+    USLOSS_ContextSwitch(&Current->state, &nextProcess->state);
 } /* dispatcher */
 
+/* ------------------------------------------------------------------------
+   Name - clockHandler
+   Purpose - Will be some sort of clock handler but in the meantime does
+              nothing.
+   Parameters - none
+   Returns - nothing
+   ----------------------------------------------------------------------- */    
+void clockHandler(){
+  // does nothing!
+}
 
 /* ------------------------------------------------------------------------
    Name - sentinel
@@ -382,14 +411,6 @@ int sentinel (char *dummy)
         USLOSS_WaitInt();
     }
 } /* sentinel */
-
- /* ------------------------------------------------------------------------
-   Name - p1_switch
-   Purpose - The purpose of p1_switch is to switch the USLOSS context to a
-              new process.
-   Parameters - old pid, new pid
-   Returns - nothing
-   ----------------------------------------------------------------------- */   
 
 /* check to determine if deadlock has occurred... */
 static void checkDeadlock()
