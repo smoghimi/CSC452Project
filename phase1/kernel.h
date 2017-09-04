@@ -29,6 +29,7 @@ struct procStruct {
    char           *stack;
    unsigned int    stackSize;
    int             status;        /* READY, BLOCKED, QUIT, etc. */
+   int             procSlot;          /* The index of this process in the process table*/
    /* other fields as needed... */
 };
 

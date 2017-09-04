@@ -21,6 +21,7 @@ void dispatcher(void);
 void launch();
 void clockHandler();
 void enableInterrupts();
+void setupParent(procStruct);
 int checkDeadlock();
 int mode();
 
@@ -236,9 +237,11 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
     }
 
     ProcTable[procSlot].status = READY;
+    ProcTable[procSlot].procSlot = procSlot;
     // for future phase(s)
     p1_fork(ProcTable[procSlot].pid);
 
+    setupParent(ProcTable[procSlot]);
     // Call dispatcher with the current process.
     if(priority != 6) {
       dispatcher();  
@@ -248,6 +251,24 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
 
     return nextPid;  // -1 is not correct! Here to prevent warning.
 } /* fork1 */
+
+void setupParent(procStruct child)
+{
+  if(DEBUG && debugflag){
+    USLOSS_Console("setupParent(): setting up parent for %s\n", child.name);
+  }
+  if (Current != NULL){
+    if (Current->childProcPtr == NULL){
+      Current->childProcPtr = &child;
+    } else {
+      procPtr aChild = Current->childProcPtr;
+      while(aChild->nextSiblingPtr != NULL){
+        aChild = aChild->nextSiblingPtr;
+      }
+      aChild->nextSiblingPtr = &child;
+    }
+  }
+}
 
 /* ------------------------------------------------------------------------
    Name - mode
@@ -281,7 +302,7 @@ void launch()
     int result;
 
     if (DEBUG && debugflag)
-        USLOSS_Console("launch(): started\n");
+        USLOSS_Console("launch(): starting %s\n", Current->name);
 
     enableInterrupts();
 
@@ -326,7 +347,26 @@ int join(int *status)
    ------------------------------------------------------------------------ */
 void quit(int status)
 {
-    p1_quit(Current->pid);
+  if (DEBUG && debugflag){
+    USLOSS_Console("quit(): quitting %s\n", Current->name);
+  }
+
+  // check to see if it has any unquit child processes
+  if (Current->childProcPtr != NULL){
+  //   procPtr tempChild = Current->childProcPtr;
+  //   while (tempChild != NULL){
+  //     if (tempChild->status > 0){
+    USLOSS_Console("quit(): Cannot quit a process with active children. Halting...\n");
+    USLOSS_Halt(1);
+  }
+  //    tempChild = tempChild->nextSiblingPtr;
+    // } 
+  // }
+
+  Current->status = status;
+  printf("%i\n", Current->status);
+  p1_quit(Current->pid);
+  dispatcher();
 } /* quit */
 
 
@@ -356,19 +396,25 @@ void dispatcher(void)
       }
     }
 
-    if (Current == NULL){
-      p1_switch(-1, nextProcess->pid);      
+    if (nextProcess != NULL){
+      nextProcess->status = BLOCKED;
+      if (Current == NULL){
+        p1_switch(-1, nextProcess->pid);      
+      } else {
+        p1_switch(Current->pid, nextProcess->pid);
+      }  
+
+      enableInterrupts();
+
+      if (Current == NULL){
+        Current = nextProcess;
+        USLOSS_ContextSwitch(NULL, &nextProcess->state);
+      } else {
+        procPtr old = Current;
+        Current = nextProcess;
+        USLOSS_ContextSwitch(&old->state, &nextProcess->state);
+      }
     }
-
-    enableInterrupts();
-
-    if (Current == NULL){
-      Current = nextProcess;
-      USLOSS_ContextSwitch(NULL, &nextProcess->state);
-    } else {
-      USLOSS_ContextSwitch(&Current->state, &nextProcess->state);
-      Current = nextProcess;    }
-
 } /* dispatcher */
 
 /* ------------------------------------------------------------------------
