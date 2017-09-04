@@ -20,7 +20,8 @@ extern int start1 (char *);
 void dispatcher(void);
 void launch();
 void clockHandler();
-static void checkDeadlock();
+void enableInterrupts();
+int checkDeadlock();
 int mode();
 
 
@@ -60,7 +61,7 @@ unsigned int nextPid = SENTINELPID;
 void startup(int argc, char *argv[])
 {
     int result; /* value returned by call to fork1() */
-
+    Current = NULL;
     /* initialize the process table */
     if (DEBUG && debugflag)
         USLOSS_Console("startup(): initializing process table, ProcTable[]\n");
@@ -211,9 +212,6 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
 
     // Initialize context for this process, but use launch function pointer for
     // the initial value of the process's program counter (PC)
-
-    Current = &ProcTable[procSlot];
-
     USLOSS_ContextInit(&(ProcTable[procSlot].state),
                        ProcTable[procSlot].stack,
                        ProcTable[procSlot].stackSize,
@@ -225,7 +223,7 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
     int adjustedPriority;
     adjustedPriority = priority-1;
     if (ReadyLists[adjustedPriority].size == 0) {
-      ReadyLists[adjustedPriority].head = Current;
+      ReadyLists[adjustedPriority].head = &ProcTable[procSlot];
       ReadyLists[adjustedPriority].size++;
     }
     else {
@@ -233,15 +231,18 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
       for (int i = 0; i < ReadyLists[adjustedPriority].size; i++){
         temp = temp->nextProcPtr;
       }
-      temp->nextProcPtr = Current;
+      temp->nextProcPtr = &ProcTable[procSlot];
       ReadyLists[adjustedPriority].size++;
     }
 
+    ProcTable[procSlot].status = READY;
     // for future phase(s)
     p1_fork(ProcTable[procSlot].pid);
 
     // Call dispatcher with the current process.
-    dispatcher();
+    if(priority != 6) {
+      dispatcher();  
+    }
 
     // More stuff to do here...
 
@@ -261,7 +262,7 @@ int mode()
   //  USLOSS_Console("mode(): Determining processor mode.\n");
   unsigned int mode;
   mode = USLOSS_PsrGet();
-  if ((mode & (1<<0)) == 0)
+  if ((mode & USLOSS_PSR_CURRENT_MODE) == 0)
     return 0;
   else
     return 1;
@@ -282,15 +283,7 @@ void launch()
     if (DEBUG && debugflag)
         USLOSS_Console("launch(): started\n");
 
-    // Enable interrupts
-    unsigned int mode;
-    mode = USLOSS_PsrGet();
-    mode = mode | (1<<1);
-    mode = USLOSS_PsrSet(mode);
-    if (mode == USLOSS_ERR_INVALID_PSR){
-      USLOSS_Console("launch(): Invalid PSR. Halting...\n");
-      USLOSS_Halt(1);
-    }
+    enableInterrupts();
 
     // Call the function passed to fork1, and capture its return value
     result = Current->startFunc(Current->startArg);
@@ -350,7 +343,7 @@ void quit(int status)
 void dispatcher(void)
 {
     if (DEBUG && debugflag) {
-      USLOSS_Console("dispatcher(): Dispatching process %s\n", Current->name);
+      USLOSS_Console("dispatcher(): Dispatching process\n");
     }
 
     procPtr nextProcess = NULL;
@@ -362,20 +355,20 @@ void dispatcher(void)
         break;
       }
     }
-    if (nextProcess == NULL) {
-      nextProcess = Current;
-    }
-    p1_switch(Current->pid, nextProcess->pid);
 
-    // Enable interrupts
-    unsigned int mode;
-    mode = USLOSS_PsrGet();
-    mode = mode | (1<<1);
-    mode = USLOSS_PsrSet(mode);
-    if (Current->priority == 6){
-    USLOSS_ContextSwitch(NULL, &nextProcess->state);
+    if (Current == NULL){
+      p1_switch(-1, nextProcess->pid);      
     }
-    USLOSS_ContextSwitch(&Current->state, &nextProcess->state);
+
+    enableInterrupts();
+
+    if (Current == NULL){
+      Current = nextProcess;
+      USLOSS_ContextSwitch(NULL, &nextProcess->state);
+    } else {
+      USLOSS_ContextSwitch(&Current->state, &nextProcess->state);
+      Current = nextProcess;    }
+
 } /* dispatcher */
 
 /* ------------------------------------------------------------------------
@@ -413,10 +406,26 @@ int sentinel (char *dummy)
 } /* sentinel */
 
 /* check to determine if deadlock has occurred... */
-static void checkDeadlock()
+int checkDeadlock()
 {
+  for (int i = 0; i < MAXPROC; i++) {
+    if(ProcTable[i].status == READY) {
+      return 1;
+    }
+  }
+  return 0;
 } /* checkDeadlock */
 
+void enableInterrupts()
+{
+  if (mode()){
+    // Enable interrupts
+    unsigned int mode;
+    mode = USLOSS_PsrGet();
+    mode = mode | (USLOSS_PSR_CURRENT_INT);
+    mode = USLOSS_PsrSet(mode);
+  }
+}
 
 /*
  * Disables the interrupts.

@@ -1,1 +1,6 @@
-1. In phase.h is it okay to include <kernel.h>? That way I can call my dispatcher with the process in it?
+1. I need some help with understanding statuses.
+	Ready: The process is ready to be run and in a ready list.
+	Blocked: The process (is\isn't) running and (is\isn't) in a ready list?
+	Quit: The process has quit
+
+2. 
