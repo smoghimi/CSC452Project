@@ -3,7 +3,8 @@
 #define READY_LISTS 6
 #define QUIT -1
 #define READY 1
-#define BLOCKED 2
+#define RUNNING 2
+#define JOIN_BLOCKED 3
 
 typedef struct procStruct procStruct;
 
