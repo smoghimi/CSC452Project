@@ -140,7 +140,7 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
     int procSlot = -1;
 
     if (DEBUG && debugflag)
-      USLOSS_Console("fork1(): creating process %s\n", name);
+      USLOSS_Console("fork1(): creating process %s with PID: %i\n", name, nextPid);
 
     // test if in kernel mode; halt if in user mode
     int modeResult;
@@ -207,7 +207,7 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
     }
     else
         strcpy(ProcTable[procSlot].startArg, arg);
-    ProcTable[procSlot].pid = nextPid++;
+    ProcTable[procSlot].pid = nextPid;
     ProcTable[procSlot].priority = priority;
     ProcTable[procSlot].stackSize = stacksize;
     ProcTable[procSlot].stack = (char *)malloc(stacksize);
@@ -237,7 +237,7 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
 
     // More stuff to do here...
 
-    return nextPid;  // -1 is not correct! Here to prevent warning.
+    return nextPid++;  // -1 is not correct! Here to prevent warning.
 } /* fork1 */
 
 void setupParent(procStruct child)
