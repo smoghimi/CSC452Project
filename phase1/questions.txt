@@ -1,8 +1,20 @@
-1. I need some help with understanding statuses.
-	Ready: The process is ready to be run and in a ready list.
-	Blocked: The process (is\isn't) running and (is\isn't) in a ready list?
-	Quit: The process has quit
+1.	The only time a process should be on the ready list is when its status is ready?
 
-2.  In the spec it says that a parent that has called join is blocked until ONE of its
+2.	Can a parent have more than 1 child? For example is each process a tree structure with 1-n
+	children or is it a linked list with 1 child which can have 1 child itself etc? What is
+	nextSiblingPtr for? This is why I think its a tree structure.
+
+(Next question depends on 2.answer)
+3.  In the spec it says that a parent that has called join is blocked until ONE of its
 	children has called quit. So if a parent has 2 children and calls join we block it. But
 	what happens when one child quits? 
+
+4.	I have the code in join:
+	if (Current->childProcPtr->status < 0) {
+    	status = &Current->childProcPtr->status;
+    	return Current->childProcPtr->pid;
+  	}
+  	But this does not work? Why do I need to remove the '&' and add a '*'?
+    	*status = Current->childProcPtr->status;
+	What is the difference?
+

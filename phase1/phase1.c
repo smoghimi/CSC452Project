@@ -327,7 +327,7 @@ int join(int *status)
   }
 
   if (Current->childProcPtr->status < 0) {
-    status = &Current->childProcPtr->status;
+    *status = Current->childProcPtr->status;
     return Current->childProcPtr->pid;
   } else {
     return -5;
