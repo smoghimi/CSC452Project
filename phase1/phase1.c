@@ -352,7 +352,6 @@ void quit(int status)
   // }
 
   Current->status = status;
-  printf("%i\n", Current->status);
   p1_quit(Current->pid);
   dispatcher();
 } /* quit */
