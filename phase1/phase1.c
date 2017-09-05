@@ -23,6 +23,7 @@ void clockHandler();
 void enableInterrupts();
 void setupParent(procStruct);
 void addToReadyList(procPtr);
+void quitProcTableEntry(int);
 int checkDeadlock();
 int mode();
 
@@ -207,7 +208,7 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
     }
     else
         strcpy(ProcTable[procSlot].startArg, arg);
-    ProcTable[procSlot].pid = nextPid;
+    ProcTable[procSlot].pid = nextPid++;
     ProcTable[procSlot].priority = priority;
     ProcTable[procSlot].stackSize = stacksize;
     ProcTable[procSlot].stack = (char *)malloc(stacksize);
@@ -237,7 +238,7 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
 
     // More stuff to do here...
 
-    return nextPid++;  // -1 is not correct! Here to prevent warning.
+    return ProcTable[procSlot].pid;  // -1 is not correct! Here to prevent warning.
 } /* fork1 */
 
 void setupParent(procStruct child)
@@ -319,8 +320,25 @@ void launch()
    ------------------------------------------------------------------------ */
 int join(int *status)
 {
+    if (DEBUG && debugflag){
+      USLOSS_Console("join(): Starting join on process %s\n", Current->name);
+    }
+    if (Current->childProcPtr == NULL) {
+      USLOSS_Console("join(): Current process has no children. Halting...\n");
+      USLOSS_Halt(1);
+      return -2;
+    } else if (Current->status == S_ZAPPED) {
+      USLOSS_Console("join(): Current process was zapped while joining. Halting...\n");
+      USLOSS_Halt(1);
+      return -1;
+    }
 
-    return -1;  // -1 is not correct! Here to prevent warning.
+    printf("%s, %i\n", Current->childProcPtr->name, Current->childProcPtr->status);
+    if (Current->childProcPtr->status < 0) {
+      return Current->childProcPtr->pid;
+    } else {
+      return -5;
+    }
 } /* join */
 
 
@@ -341,21 +359,27 @@ void quit(int status)
 
   // check to see if it has any unquit child processes
   if (Current->childProcPtr != NULL){
-  //   procPtr tempChild = Current->childProcPtr;
-  //   while (tempChild != NULL){
-  //     if (tempChild->status > 0){
-    USLOSS_Console("quit(): Cannot quit a process with active children. Halting...\n");
+    USLOSS_Console("quit(): Cannot quit a process with children. Halting...\n");
     USLOSS_Halt(1);
   }
-  //    tempChild = tempChild->nextSiblingPtr;
-    // } 
-  // }
 
-  Current->status = status;
-  p1_quit(Current->pid);
-  dispatcher();
+  if (Current->status >= 0){
+    //quitProcTableEntry(Current->procSlot);
+    printf("Status = %i\n", Current->status);
+    Current->status = status;
+    printf("Status = %i\n", Current->status);
+    p1_quit(Current->pid);
+    dispatcher();
+  }
 } /* quit */
 
+void quitProcTableEntry(int procSlot)
+{
+  ProcTable[procSlot].priority = 0;
+  free(ProcTable[procSlot].stack);
+  ProcTable[procSlot].stackSize = 0;
+  ProcTable[procSlot].procSlot = -1;
+}
 
 /* ------------------------------------------------------------------------
    Name - dispatcher

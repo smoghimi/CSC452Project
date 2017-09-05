@@ -3,4 +3,6 @@
 	Blocked: The process (is\isn't) running and (is\isn't) in a ready list?
 	Quit: The process has quit
 
-2. 
+2.  In the spec it says that a parent that has called join is blocked until ONE of its
+	children has called quit. So if a parent has 2 children and calls join we block it. But
+	what happens when one child quits? 

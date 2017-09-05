@@ -4,7 +4,8 @@
 #define QUIT -1
 #define READY 1
 #define RUNNING 2
-#define JOIN_BLOCKED 3
+#define JOIN_BLOCKED 3    // Means a process has started a join but is blocked
+#define S_ZAPPED 4        // Means a process has been zapped
 
 typedef struct procStruct procStruct;
 
