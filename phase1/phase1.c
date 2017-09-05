@@ -221,21 +221,6 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
                        launch);
 
     // Add the process to the correct ready list
-    // since ReadyLists goes from 0-5 we need to subtract 1 from the priority
-    // int adjustedPriority;
-    // adjustedPriority = priority-1;
-    // if (ReadyLists[adjustedPriority].size == 0) {
-    //   ReadyLists[adjustedPriority].head = &ProcTable[procSlot];
-    //   ReadyLists[adjustedPriority].size++;
-    // }
-    // else {
-    //   procPtr temp = ReadyLists[adjustedPriority].head;
-    //   for (int i = 0; i < ReadyLists[adjustedPriority].size; i++){
-    //     temp = temp->nextProcPtr;
-    //   }
-    //   temp->nextProcPtr = &ProcTable[procSlot];
-    //   ReadyLists[adjustedPriority].size++;
-    // }
     addToReadyList(&ProcTable[procSlot]);
 
     ProcTable[procSlot].status = READY;
@@ -243,7 +228,8 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
     // for future phase(s)
     p1_fork(ProcTable[procSlot].pid);
 
-    setupParent(ProcTable[procSlot]);
+    if(Current != NULL)
+      setupParent(ProcTable[procSlot]);
     // Call dispatcher with the current process.
     if(priority != 6) {
       dispatcher();  
@@ -465,7 +451,6 @@ void addToReadyList(procPtr toBeAdded)
    Side Effects -  if system is in deadlock, print appropriate error
                    and halt.
    ----------------------------------------------------------------------- */
-
 int sentinel (char *dummy)
 {
     if (DEBUG && debugflag)
