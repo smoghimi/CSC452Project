@@ -22,6 +22,7 @@ void launch();
 void clockHandler();
 void enableInterrupts();
 void setupParent(procStruct);
+void addToReadyList(procPtr);
 int checkDeadlock();
 int mode();
 
@@ -397,7 +398,8 @@ void dispatcher(void)
     }
 
     if (nextProcess != NULL){
-      nextProcess->status = BLOCKED;
+      nextProcess->status = RUNNING;
+      addToReadyList(Current);
       if (Current == NULL){
         p1_switch(-1, nextProcess->pid);      
       } else {
@@ -426,6 +428,29 @@ void dispatcher(void)
    ----------------------------------------------------------------------- */    
 void clockHandler(){
   // does nothing!
+}
+
+/* ------------------------------------------------------------------------
+   Name - addToReadyList
+   Purpose - Adds a procPtr to the ready list.
+   Parameters - procPtr
+   Returns - nothing
+   ----------------------------------------------------------------------- */
+void addToReadyList(prcoPtr toBeAdded)
+{
+  int adjustedPriority = toBeAdded->priority-1
+  if (ReadyLists[adjustedPriority].size == 0) {
+      ReadyLists[adjustedPriority].head = toBeAdded;
+      ReadyLists[adjustedPriority].size++;
+  }
+  else {
+    procPtr temp = ReadyLists[adjustedPriority].head;
+    for (int i = 0; i < ReadyLists[adjustedPriority].size; i++){
+      temp = temp->nextProcPtr;
+    }
+    temp->nextProcPtr = toBeAdded;
+    ReadyLists[adjustedPriority].size++;
+  }
 }
 
 /* ------------------------------------------------------------------------
