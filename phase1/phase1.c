@@ -349,6 +349,13 @@ int join(int *status)
     dispatcher();
   }
 
+  temp = Current->childProcPtr;
+  beforeTemp = NULL;
+  while (temp->status >= 0 && temp->nextSiblingPtr != NULL){
+    beforeTemp = temp;
+    temp = temp->nextSiblingPtr;      
+  }
+
   temp->status = 0;
 
   if (beforeTemp == NULL){
@@ -571,7 +578,7 @@ int checkDeadlock()
     return 1;
   }
   }
-  USLOSS_Console("All processes have finished running. Halting...\n");
+  USLOSS_Console("All processes completed.\n");
   USLOSS_Halt(0);
   return 0;
 } /* checkDeadlock */
