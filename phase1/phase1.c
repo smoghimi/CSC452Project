@@ -80,6 +80,7 @@ void startup(int argc, char *argv[])
 
     // Initialize the clock interrupt handler
     USLOSS_IntVec[USLOSS_CLOCK_INT] = clockHandler;
+    USLOSS_IntVec[USLOSS_ILLEGAL_INT] = clockHandler;
 
     // startup a sentinel process
     if (DEBUG && debugflag)
@@ -147,7 +148,10 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
   int modeResult;
   modeResult = mode();
   if (modeResult != 1){
-    USLOSS_Console("fork1(): Must be in kernel mode to access fork1. Halting...\n");
+    USLOSS_Console("fork1(): called while in user mode, by process ");
+    if(Current != NULL){
+      USLOSS_Console("%i. Halting...\n", Current->pid);
+    }
     USLOSS_Halt(1);
     return -1;
   }
@@ -393,7 +397,14 @@ void quit(int status)
 
   // check to see if it has any unquit child processes
   if (Current->childProcPtr != NULL && Current->childProcPtr->status > 0){
-    USLOSS_Console("quit(): Cannot quit a process with active children. Halting...\n");
+    USLOSS_Console("quit(): process %i, '%s', has active children. Halting...\n", Current->pid, Current->name);
+    USLOSS_Halt(1);
+  }
+
+  int modeResult;
+  modeResult = mode();
+  if (modeResult != 1){
+    USLOSS_Console("quit(): called while in user mode, by process %i. Halting...\n", Current->pid);
     USLOSS_Halt(1);
   }
 
@@ -599,5 +610,4 @@ void disableInterrupts()
     // turn the interrupts OFF iff we are in kernel mode
     // if not in kernel mode, print an error message and
     // halt USLOSS
-
 } /* disableInterrupts */
