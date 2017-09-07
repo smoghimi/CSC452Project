@@ -556,7 +556,7 @@ void dumpProcesses()
       } else if (ProcTable[i].status == 2){
         USLOSS_Console("RUNNING\t");
       } else if (ProcTable[i].status == 3){
-        USLOSS_Console("JOIN_BLOCKED\t");
+        USLOSS_Console("JOIN_BLOCKED");
       } else if (ProcTable[i].status == 4){
         USLOSS_Console("ZAPPED\t");
       }
