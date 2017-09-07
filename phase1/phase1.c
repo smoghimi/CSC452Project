@@ -541,43 +541,30 @@ int sentinel (char *dummy)
 
 void dumpProcesses()
 {
-  USLOSS_Console("*");
-  for(int i = 0; i< 94; i++){
-    USLOSS_Console("-");
-  }
-  USLOSS_Console("*\n");
-  USLOSS_Console("|%-50s|%-10s|%-10s|%-10s|%-10s|\n", "Process", "PID", "C_PID", "P_PID", "Status");
-  USLOSS_Console("|");
-  for(int i = 0; i< 94; i++){
-    if (i == 50 || i == 61 || i == 72 || i == 83){
-      USLOSS_Console("|");
-    } else {
-      USLOSS_Console("-");
-    }
-  }
-  USLOSS_Console("|\n");
+  USLOSS_Console("%s\t%s\t%s\t%s\t\t%s\t%s\t%s\n", "PID", "Parent", "Priority", "Status", "# Kids", "CPUtime", "Name");
   for (int i = 0; i < MAXPROC; i++){
     if (ProcTable[i].status != 0){
-      USLOSS_Console("|%-50s|%-10i|", ProcTable[i].name, ProcTable[i].pid);
-      if (ProcTable[i].childProcPtr != NULL){
-        USLOSS_Console("%-10i|", ProcTable[i].childProcPtr->pid);
+      USLOSS_Console(" %i\t", ProcTable[i].pid);
+      if(ProcTable[i].parentPtr != NULL){
+        USLOSS_Console(" %i\t", ProcTable[i].parentPtr->pid);
       } else {
-        USLOSS_Console("%-10s|", "n/a");
+        USLOSS_Console(" -2\t");
       }
-      if (ProcTable[i].parentPtr != NULL){
-        USLOSS_Console("%-10i|", ProcTable[i].parentPtr->pid);
+      USLOSS_Console("   %i\t\t", ProcTable[i].priority);
+      if(ProcTable[i].status == 1){
+        USLOSS_Console("READY\t");
+      } else if (ProcTable[i].status == 2){
+        USLOSS_Console("RUNNING\t");
+      } else if (ProcTable[i].status == 3){
+        USLOSS_Console("JOIN_BLOCKED\t");
+      } else if (ProcTable[i].status == 4){
+        USLOSS_Console("ZAPPED\t");
       }
-      else {
-        USLOSS_Console("%-10s|", "n/a");
-      }
-      USLOSS_Console("%-10i|\n", ProcTable[i].status);
+      USLOSS_Console("\t  0\t");
+      USLOSS_Console("   -1\t");
+      USLOSS_Console("%s\n", ProcTable[i].name);
     }
   }
-  USLOSS_Console("*");
-  for(int i = 0; i< 94; i++){
-    USLOSS_Console("-");
-  }
-  USLOSS_Console("*\n");
 }
 
 /* check to determine if deadlock has occurred... */
