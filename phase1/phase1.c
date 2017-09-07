@@ -141,7 +141,7 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
   int procSlot = -1;
 
   if (DEBUG && debugflag)
-    USLOSS_Console("fork1(): creating process %s with PID: %i\n", name, nextPid);
+    USLOSS_Console("fork1(): creating process %s\n", name);
 
   // test if in kernel mode; halt if in user mode
   int modeResult;
@@ -185,13 +185,12 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
       return -1;
     } 
     else {
-      while (ProcTable[nextPid % MAXPROC].priority != 0) {
+      while (ProcTable[nextPid % MAXPROC].status > 0) {
         nextPid++;
       }
       procSlot = nextPid%MAXPROC;
       processTableCounter++;
     }
-
     // fill-in entry in process table */
     if ( strlen(name) >= (MAXNAME - 1) ) {
         USLOSS_Console("fork1(): Process name is too long.  Halting...\n");
@@ -220,7 +219,6 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
                        ProcTable[procSlot].stackSize,
                        NULL,
                        launch);
-
     // Add the process to the correct ready list
     addToReadyList(&ProcTable[procSlot]);
 
@@ -306,6 +304,11 @@ void launch()
 
 } /* launch */
 
+int getpid()
+{
+  return Current->pid;
+}
+
 
 /* ------------------------------------------------------------------------
    Name - join
@@ -339,7 +342,9 @@ int join(int *status)
   procPtr temp = Current->childProcPtr;
   procPtr beforeTemp = NULL;
   while (temp->status >= 0 && temp->nextSiblingPtr != NULL){
-    beforeTemp = temp;
+    if(temp->pid != Current->childProcPtr->pid){
+      beforeTemp = temp;      
+    }
     temp = temp->nextSiblingPtr;      
   }
 
@@ -360,12 +365,13 @@ int join(int *status)
 
   if (beforeTemp == NULL){
     Current->childProcPtr = temp->nextSiblingPtr;
-  } else if (temp->nextSiblingPtr == NULL){
-    beforeTemp->nextSiblingPtr = NULL;
   } else {
     beforeTemp->nextSiblingPtr = temp->nextSiblingPtr;
   }
+  temp->nextSiblingPtr = NULL;
+  temp->nextProcPtr = NULL;
   *status = temp->quitStatus;
+  Current->status = S_RUNNING;
   return temp->pid;
 } /* join */
 
@@ -392,6 +398,7 @@ void quit(int status)
   }
 
   if (Current->status >= 0){
+    processTableCounter--;
     //quitProcTableEntry(Current->procSlot);
     if (Current->parentPtr == NULL){
       Current->status = 0;
@@ -429,7 +436,7 @@ void dispatcher(void)
   }
 
   // Check if current has a parent that is join blocked
-  if (Current != NULL && Current->parentPtr != NULL && Current->parentPtr->status == S_JOIN_BLOCKED){
+  if (Current != NULL && Current->parentPtr != NULL && Current->parentPtr->status == S_JOIN_BLOCKED && Current->status < 0){
     procPtr old = Current;
     Current = Current->parentPtr;
     USLOSS_ContextSwitch(&old->state, &Current->state);
@@ -490,6 +497,9 @@ void clockHandler(){
    ----------------------------------------------------------------------- */
 void addToReadyList(procPtr toBeAdded)
 {
+  if (DEBUG && debugflag) {
+    USLOSS_Console("addToReadyList(): Adding process %s with pid:%i and priority:%i\n", toBeAdded->name, toBeAdded->pid, toBeAdded->priority);
+  }
   toBeAdded->status = 1;
   int adjustedPriority = toBeAdded->priority-1;
   if (ReadyLists[adjustedPriority].size == 0) {
@@ -498,7 +508,7 @@ void addToReadyList(procPtr toBeAdded)
   }
   else {
     procPtr temp = ReadyLists[adjustedPriority].head;
-    for (int i = 0; i < ReadyLists[adjustedPriority].size; i++){
+    while(temp->nextProcPtr != NULL){
       temp = temp->nextProcPtr;
     }
     temp->nextProcPtr = toBeAdded;

@@ -33,7 +33,7 @@ int start1(char *arg)
             USLOSS_Console("start1(): after join of child %d, status = %d\n",
                            kidpid, status);
         }
-
+        dumpProcesses();
     }
     return 0;
 }
