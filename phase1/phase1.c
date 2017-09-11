@@ -618,3 +618,39 @@ void disableInterrupts()
     // if not in kernel mode, print an error message and
     // halt USLOSS
 } /* disableInterrupts */
+
+/*
+* This operation marks a process pid as being zapped. Subsequent calls to
+* isZapped by that process will return 1
+* Does not return until the zapped proccess has quit
+*/
+int zap(int pid)
+{
+	if(DEBUG && debugflag)
+		USLOSS_Console("zap(): Zapping process")
+	if(Current != NULL)
+	{
+		if(Current->pid == pid)
+		{
+			USLOSS_Console("zap(): process with pid %d is trying to call itself. Halting...\n");
+			USLOSS_Halt(1);
+		}
+
+		int p = 0;
+		for(p = 0; p < MAXPROC; p++)
+		{
+			if(procTable[p]->pid == pid)
+			{
+				while(procTable[p]->status != S_QUIT))
+					procTable[p]->status = S_ZAPPED;
+				return 0;
+			}
+		}
+
+		if(p == MAXPROC)
+		{
+			USLOSS_Console("zap(): process with pid %d does not exist in the table. Halting...\n");
+			USLOSS_Halt(1);
+		}
+	}
+}
