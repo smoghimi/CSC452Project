@@ -26,6 +26,13 @@ void addToReadyList(procPtr);
 void quitProcTableEntry(int);
 int checkDeadlock();
 int mode();
+int zap(int pid);
+int isZapped();
+int blockMe(int newStatus);
+int unblockProc(int pid);
+int readCurStartTime();
+void timeSlice();
+int readTime();
 
 
 /* -------------------------- Globals ------------------------------------- */
