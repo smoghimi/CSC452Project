@@ -627,30 +627,30 @@ void disableInterrupts()
 int zap(int pid)
 {
 	if(DEBUG && debugflag)
-		USLOSS_Console("zap(): Zapping process")
+		USLOSS_Console("zap(): Zapping process");
 	if(Current != NULL)
 	{
 		if(Current->pid == pid)
 		{
 			USLOSS_Console("zap(): process with pid %d is trying to call itself. Halting...\n");
 			USLOSS_Halt(1);
+			return -1;
 		}
 
 		int p = 0;
 		for(p = 0; p < MAXPROC; p++)
 		{
-			if(procTable[p]->pid == pid)
-			{
-				while(procTable[p]->status != S_QUIT))
-					procTable[p]->status = S_ZAPPED;
-				return 0;
-			}
+			if(ProcTable[p].pid == pid)
+				while(ProcTable[p].status != S_QUIT)
+					ProcTable[p].status = S_ZAPPED;
 		}
 
 		if(p == MAXPROC)
 		{
 			USLOSS_Console("zap(): process with pid %d does not exist in the table. Halting...\n");
 			USLOSS_Halt(1);
+			return -1;
 		}
 	}
+	return 0;
 }
