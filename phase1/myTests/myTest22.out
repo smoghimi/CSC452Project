@@ -1,0 +1,4 @@
+start1(): started
+start1(): could not fork a child--invalid priority
+start1(): could not fork a child--invalid priority
+All processes completed.

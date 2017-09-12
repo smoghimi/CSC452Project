@@ -1,0 +1,6 @@
+TEST: start 50 processes
+TEST: i = 48, pid is -1.
+TEST: i = 49, pid is -1.
+TEST: i = 50, pid is -1.
+TEST: i = 51, pid is -1.
+All processes completed.

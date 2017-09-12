@@ -47,57 +47,6 @@ start1(): after fork of child 47
 start1(): after fork of child 48
 start1(): after fork of child 49
 start1(): after fork of child 50
-PID	Parent	Priority	Status		# Kids	CPUtime	Name
- 50	  2	   3		READY		  0	   -1	XXp1
- 1	  -2	   6		READY		  0	   -1	sentinel
- 2	  -2	   1		RUNNING		  0	   -1	start1
- 3	  2	   3		READY		  0	   -1	XXp1
- 4	  2	   3		READY		  0	   -1	XXp1
- 5	  2	   3		READY		  0	   -1	XXp1
- 6	  2	   3		READY		  0	   -1	XXp1
- 7	  2	   3		READY		  0	   -1	XXp1
- 8	  2	   3		READY		  0	   -1	XXp1
- 9	  2	   3		READY		  0	   -1	XXp1
- 10	  2	   3		READY		  0	   -1	XXp1
- 11	  2	   3		READY		  0	   -1	XXp1
- 12	  2	   3		READY		  0	   -1	XXp1
- 13	  2	   3		READY		  0	   -1	XXp1
- 14	  2	   3		READY		  0	   -1	XXp1
- 15	  2	   3		READY		  0	   -1	XXp1
- 16	  2	   3		READY		  0	   -1	XXp1
- 17	  2	   3		READY		  0	   -1	XXp1
- 18	  2	   3		READY		  0	   -1	XXp1
- 19	  2	   3		READY		  0	   -1	XXp1
- 20	  2	   3		READY		  0	   -1	XXp1
- 21	  2	   3		READY		  0	   -1	XXp1
- 22	  2	   3		READY		  0	   -1	XXp1
- 23	  2	   3		READY		  0	   -1	XXp1
- 24	  2	   3		READY		  0	   -1	XXp1
- 25	  2	   3		READY		  0	   -1	XXp1
- 26	  2	   3		READY		  0	   -1	XXp1
- 27	  2	   3		READY		  0	   -1	XXp1
- 28	  2	   3		READY		  0	   -1	XXp1
- 29	  2	   3		READY		  0	   -1	XXp1
- 30	  2	   3		READY		  0	   -1	XXp1
- 31	  2	   3		READY		  0	   -1	XXp1
- 32	  2	   3		READY		  0	   -1	XXp1
- 33	  2	   3		READY		  0	   -1	XXp1
- 34	  2	   3		READY		  0	   -1	XXp1
- 35	  2	   3		READY		  0	   -1	XXp1
- 36	  2	   3		READY		  0	   -1	XXp1
- 37	  2	   3		READY		  0	   -1	XXp1
- 38	  2	   3		READY		  0	   -1	XXp1
- 39	  2	   3		READY		  0	   -1	XXp1
- 40	  2	   3		READY		  0	   -1	XXp1
- 41	  2	   3		READY		  0	   -1	XXp1
- 42	  2	   3		READY		  0	   -1	XXp1
- 43	  2	   3		READY		  0	   -1	XXp1
- 44	  2	   3		READY		  0	   -1	XXp1
- 45	  2	   3		READY		  0	   -1	XXp1
- 46	  2	   3		READY		  0	   -1	XXp1
- 47	  2	   3		READY		  0	   -1	XXp1
- 48	  2	   3		READY		  0	   -1	XXp1
- 49	  2	   3		READY		  0	   -1	XXp1
 XXp1(): started, pid = 3
 start1(): after join of child 3, status = -3
 XXp1(): started, pid = 4
@@ -242,57 +191,6 @@ start1(): after fork of child 97
 start1(): after fork of child 98
 start1(): after fork of child 99
 start1(): after fork of child 100
-PID	Parent	Priority	Status		# Kids	CPUtime	Name
- 100	  2	   3		READY		  0	   -1	XXp1
- 1	  -2	   6		READY		  0	   -1	sentinel
- 2	  -2	   1		RUNNING		  0	   -1	start1
- 53	  2	   3		READY		  0	   -1	XXp1
- 54	  2	   3		READY		  0	   -1	XXp1
- 55	  2	   3		READY		  0	   -1	XXp1
- 56	  2	   3		READY		  0	   -1	XXp1
- 57	  2	   3		READY		  0	   -1	XXp1
- 58	  2	   3		READY		  0	   -1	XXp1
- 59	  2	   3		READY		  0	   -1	XXp1
- 60	  2	   3		READY		  0	   -1	XXp1
- 61	  2	   3		READY		  0	   -1	XXp1
- 62	  2	   3		READY		  0	   -1	XXp1
- 63	  2	   3		READY		  0	   -1	XXp1
- 64	  2	   3		READY		  0	   -1	XXp1
- 65	  2	   3		READY		  0	   -1	XXp1
- 66	  2	   3		READY		  0	   -1	XXp1
- 67	  2	   3		READY		  0	   -1	XXp1
- 68	  2	   3		READY		  0	   -1	XXp1
- 69	  2	   3		READY		  0	   -1	XXp1
- 70	  2	   3		READY		  0	   -1	XXp1
- 71	  2	   3		READY		  0	   -1	XXp1
- 72	  2	   3		READY		  0	   -1	XXp1
- 73	  2	   3		READY		  0	   -1	XXp1
- 74	  2	   3		READY		  0	   -1	XXp1
- 75	  2	   3		READY		  0	   -1	XXp1
- 76	  2	   3		READY		  0	   -1	XXp1
- 77	  2	   3		READY		  0	   -1	XXp1
- 78	  2	   3		READY		  0	   -1	XXp1
- 79	  2	   3		READY		  0	   -1	XXp1
- 80	  2	   3		READY		  0	   -1	XXp1
- 81	  2	   3		READY		  0	   -1	XXp1
- 82	  2	   3		READY		  0	   -1	XXp1
- 83	  2	   3		READY		  0	   -1	XXp1
- 84	  2	   3		READY		  0	   -1	XXp1
- 85	  2	   3		READY		  0	   -1	XXp1
- 86	  2	   3		READY		  0	   -1	XXp1
- 87	  2	   3		READY		  0	   -1	XXp1
- 88	  2	   3		READY		  0	   -1	XXp1
- 89	  2	   3		READY		  0	   -1	XXp1
- 90	  2	   3		READY		  0	   -1	XXp1
- 91	  2	   3		READY		  0	   -1	XXp1
- 92	  2	   3		READY		  0	   -1	XXp1
- 93	  2	   3		READY		  0	   -1	XXp1
- 94	  2	   3		READY		  0	   -1	XXp1
- 95	  2	   3		READY		  0	   -1	XXp1
- 96	  2	   3		READY		  0	   -1	XXp1
- 97	  2	   3		READY		  0	   -1	XXp1
- 98	  2	   3		READY		  0	   -1	XXp1
- 99	  2	   3		READY		  0	   -1	XXp1
 XXp1(): started, pid = 53
 start1(): after join of child 53, status = -53
 XXp1(): started, pid = 54
