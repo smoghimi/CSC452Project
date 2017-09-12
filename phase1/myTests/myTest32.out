@@ -1,0 +1,7 @@
+start1(): started
+start1(): after fork of child 3
+start1(): performing first join
+XXp1(): started pid=3
+XXp1(): arg = `XXp1'
+XXp1(): calling zap(4), which is a non-existant process
+zap(): process being zapped does not exist.  Halting...
