@@ -6,6 +6,7 @@
 #define S_RUNNING 2
 #define S_JOIN_BLOCKED 3    // Means a process has started a join but is blocked
 #define S_ZAPPED 4        // Means a process has been zapped
+#define S_BLOCKED 5
 
 typedef struct procStruct procStruct;
 

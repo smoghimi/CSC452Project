@@ -642,10 +642,10 @@ int zap(int pid)
 		{
 			if(ProcTable[p].pid == pid)
 			{
-				ProcTable[p] = S_ZAPPED;
+				ProcTable[p].status = S_ZAPPED;
 				while(ProcTable[p].status != S_QUIT)
 					Current->status = S_BLOCKED;
-				ProcTable[p] = S_READY;
+				ProcTable[p].status = S_READY;
 			}
 		}
 
@@ -656,5 +656,15 @@ int zap(int pid)
 			return -1;
 		}
 	}
+	return 0;
+}
+
+/*
+* Simply checks if the currently running proccess has been zapped
+*/
+int isZapped()
+{
+	if(Current->status == S_ZAPPED)
+		return 1;
 	return 0;
 }
