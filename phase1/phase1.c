@@ -641,8 +641,12 @@ int zap(int pid)
 		for(p = 0; p < MAXPROC; p++)
 		{
 			if(ProcTable[p].pid == pid)
+			{
+				ProcTable[p] = S_ZAPPED;
 				while(ProcTable[p].status != S_QUIT)
-					ProcTable[p].status = S_ZAPPED;
+					Current->status = S_BLOCKED;
+				ProcTable[p] = S_READY;
+			}
 		}
 
 		if(p == MAXPROC)
