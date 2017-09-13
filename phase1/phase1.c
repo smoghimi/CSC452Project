@@ -477,6 +477,7 @@ void unBlockZappers(int procSlot)
    ----------------------------------------------------------------------- */
 void dispatcher(void)
 {
+  int a;
   if (DEBUG && debugflag) {
     USLOSS_Console("dispatcher(): Dispatching process\n");
   }
@@ -485,6 +486,7 @@ void dispatcher(void)
   if (Current != NULL && Current->parentPtr != NULL && Current->parentPtr->status == S_JOIN_BLOCKED && Current->status < 0){
     procPtr old = Current;
     Current = Current->parentPtr;
+    a = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, USLOSS_CLOCK_INT, &Current->startTime);
     USLOSS_ContextSwitch(&old->state, &Current->state);
   }
 
@@ -517,6 +519,7 @@ void dispatcher(void)
 
     if (Current == NULL){
       Current = nextProcess;
+      a = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, USLOSS_CLOCK_INT, &nextProcess->startTime);
       USLOSS_ContextSwitch(NULL, &nextProcess->state);
     } 
     else {
@@ -525,6 +528,7 @@ void dispatcher(void)
       }
       procPtr old = Current;
       Current = nextProcess;
+      a = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, USLOSS_CLOCK_INT, &nextProcess->startTime);
       USLOSS_ContextSwitch(&old->state, &nextProcess->state);
     }
   }
@@ -537,8 +541,20 @@ void dispatcher(void)
    Parameters - none
    Returns - nothing
    ----------------------------------------------------------------------- */    
-void clockHandler(){
-  // does nothing!
+void clockHandler()
+{
+  if (Current != NULL){
+    timeSlice();
+  }
+}
+
+void timeSlice()
+{
+  int currentTime, a;
+  a = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, USLOSS_CLOCK_INT, &currentTime);
+  if (Current->startTime - currentTime >= 80000){
+    dispatcher();
+  }
 }
 
 /* ------------------------------------------------------------------------
@@ -619,7 +635,7 @@ void dumpProcesses()
         USLOSS_Console("%i\t", ProcTable[i].status);
       }
       USLOSS_Console("\t  0\t");
-      USLOSS_Console("   -1\t");
+      USLOSS_Console("   %d\t", ProcTable[i].startTime);
       USLOSS_Console("%s\n", ProcTable[i].name);
     }
     else {

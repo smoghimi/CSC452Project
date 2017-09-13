@@ -38,6 +38,7 @@ struct procStruct {
    int             procSlot;          /* The index of this process in the process table*/
    int             quitStatus;
    int             zapped;
+   int             startTime;
    /* other fields as needed... */
 };
 
