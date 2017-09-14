@@ -1,8 +1,0 @@
-TEST:Getpid passed. 3 3
-start1: joined with child 3
-TEST:Getpid passed. 4 4
-start1: joined with child 4
-TEST:Getpid passed. 5 5
-start1: joined with child 5
-TEST:exit getpid test.
-All processes completed.

@@ -1,7 +1,0 @@
-start1() started
-start1(): created XXp2 with pid = 3
-start1(): calling join
--2 returned, which is correct!
--2 returned, which is correct!
-start1(): join returned pid = 3, status = 0
-All processes completed.

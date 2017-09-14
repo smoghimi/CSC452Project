@@ -6,7 +6,7 @@ ASSIGNMENT = 452phase1
 CC = gcc
 AR = ar
 
-COBJS = phase1.o
+COBJS = phase1.o p1.o
 CSRCS = ${COBJS:.o=.c}
 
 HDRS = kernel.h phase1.h

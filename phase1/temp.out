@@ -1,0 +1,2 @@
+gcc -Wall -g -I/Users/smoghimi/include -I. -std=gnu99 -D_XOPEN_SOURCE       -c testcases/test36.c
+gcc -L. -L/Users/smoghimi/lib -o test36 test36.o -lphase1 -lusloss3.6 p1.o

@@ -1,7 +1,0 @@
-start1(): started
-start1(): after fork of child 3
-start1(): performing join
-XXp1(): started
-XXp1(): arg = `XXp1'
-XXp1(): about to zap the Sentinel process
-checkDeadlock(): numProc = 3. Only Sentinel should be left. Halting...

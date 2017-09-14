@@ -1,3 +1,0 @@
-start1(): started
-start1(): after fork of child 3
-quit(): process 2, 'start1', has active children. Halting...

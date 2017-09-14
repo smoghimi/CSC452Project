@@ -1,6 +1,0 @@
-start1(): started
-start1(): after fork of child 3
-start1(): performing join
-XXp1(): started
-XXp1(): arg = `XXp1'
-quit(): called while in user mode, by process 3. Halting...
