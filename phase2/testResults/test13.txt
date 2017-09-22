@@ -1,0 +1,7 @@
+start2(): at beginning, pid = 3
+start2(): fork'd child 4
+XXp1(): started, calling waitDevice for clock
+XXp1(): after waitDevice call
+XXp1(): status = 0
+start2(): joined with kid 4, status = -3
+All processes completed.

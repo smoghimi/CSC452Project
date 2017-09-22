@@ -5,8 +5,7 @@
 #define S_READY 1
 #define S_RUNNING 2
 #define S_JOIN_BLOCKED 3    // Means a process has started a join but is blocked
-#define S_ZAPPED 4        // Means a process has been zapped
-#define S_BLOCKED 5
+#define S_ZAPPING 4        // Means a process has blocked after calling zap
 
 typedef struct procStruct procStruct;
 
@@ -24,6 +23,8 @@ struct procStruct {
    procPtr         childProcPtr;
    procPtr         nextSiblingPtr;
    procPtr         parentPtr;
+   procPtr         zapPtr;
+   procPtr         nextZapPtr;
    char            name[MAXNAME];     /* process's name */
    char            startArg[MAXARG];  /* args passed to process */
    USLOSS_Context  state;             /* current context for process */
@@ -35,6 +36,8 @@ struct procStruct {
    int             status;        /* READY, BLOCKED, QUIT, etc. */
    int             procSlot;          /* The index of this process in the process table*/
    int             quitStatus;
+   int             zapped;
+   int             startTime;
    /* other fields as needed... */
 };
 

@@ -17,22 +17,25 @@
 /* ------------------------- Prototypes ----------------------------------- */
 int sentinel (char *);
 extern int start1 (char *);
-void dispatcher(void);
-void launch();
-void clockHandler();
-void enableInterrupts();
-void setupParent(procPtr);
+
 void addToReadyList(procPtr);
 void quitProcTableEntry(int);
-int checkDeadlock();
-int mode();
-int zap(int pid);
-int isZapped();
+void setupParent(procPtr);
+void unBlockZappers(int);
+void enableInterrupts();
+void dispatcher(void);
+void clockHandler();
+void timeSlice();
+void launch();
+
 int blockMe(int newStatus);
 int unblockProc(int pid);
 int readCurStartTime();
-void timeSlice();
+int checkDeadlock();
+int zap(int pid);
+int isZapped();
 int readTime();
+int mode();
 
 
 /* -------------------------- Globals ------------------------------------- */
@@ -165,16 +168,14 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
 
     // Return if stack size is too small
     if (stacksize < USLOSS_MIN_STACK) {
-      USLOSS_Console("fork1(): Process stack size is too small. Halting...\n");
-      USLOSS_Halt(1);
       return -2;
+      USLOSS_Halt(1);
     }
 
     // Return if priority is out of range
     if (priority > 6 || priority < 0) {
-      USLOSS_Console("fork1(): Process priority out of range. Halting...\n");
-      USLOSS_Halt(1);
       return -1;
+      USLOSS_Halt(1);
     }
 
     // Return if Startfunc or name is null
@@ -191,12 +192,11 @@ int fork1(char *name, int (*startFunc)(char *), char *arg,
 
     // Is there room in the process table? What is the next PID?
     if (processTableCounter >= MAXPROC) {
-      USLOSS_Console("fork1(): Process table is full. Halting...\n");
-      USLOSS_Halt(1);
       return -1;
+      USLOSS_Halt(1);
     } 
     else {
-      while (ProcTable[nextPid % MAXPROC].status > 0) {
+      while (ProcTable[nextPid % MAXPROC].status != S_EMPTY) {
         nextPid++;
       }
       procSlot = nextPid%MAXPROC;
@@ -340,14 +340,10 @@ int join(int *status)
   }
 
   if (Current->childProcPtr == NULL) { // If it has no children.
-    USLOSS_Console("join(): Current process has no children. Halting...\n");
-    USLOSS_Halt(1);
+    //USLOSS_Console("join(): Current process has no children. Halting...\n");
     return -2;
-  } else if (Current->status == S_ZAPPED) { // If it was zapped.
-    USLOSS_Console("join(): Current process was zapped while joining. Halting...\n");
     USLOSS_Halt(1);
-    return -1;
-  }
+  } 
 
   // If it has at least one child.
   procPtr temp = Current->childProcPtr;
@@ -358,12 +354,12 @@ int join(int *status)
     }
     temp = temp->nextSiblingPtr;      
   }
-
   // If this condition is true then no children have quit.
   if (temp->nextSiblingPtr == NULL && temp->status >= 0){
     Current->status = S_JOIN_BLOCKED;
     dispatcher();
   }
+  int returnVal;
 
   temp = Current->childProcPtr;
   beforeTemp = NULL;
@@ -379,11 +375,16 @@ int join(int *status)
   } else {
     beforeTemp->nextSiblingPtr = temp->nextSiblingPtr;
   }
-  temp->nextSiblingPtr = NULL;
-  temp->nextProcPtr = NULL;
+
   *status = temp->quitStatus;
   Current->status = S_RUNNING;
-  return temp->pid;
+
+  returnVal = temp->pid;
+  if(isZapped()){
+    returnVal = -1;
+  }
+  quitProcTableEntry(temp->procSlot);
+  return returnVal;
 } /* join */
 
 
@@ -417,10 +418,11 @@ void quit(int status)
 
   if (Current->status >= 0){
     processTableCounter--;
-    //quitProcTableEntry(Current->procSlot);
     if (Current->parentPtr == NULL){
       Current->status = 0;
+      quitProcTableEntry(Current->procSlot);
     } else {
+      unBlockZappers(Current->procSlot);
       Current->status = -1;
     }
     Current->quitStatus = status;
@@ -431,10 +433,36 @@ void quit(int status)
 
 void quitProcTableEntry(int procSlot)
 {
+  // Check to see if it was zapped. If it was, unblock all zap'ers.
+  unBlockZappers(procSlot);
+
   ProcTable[procSlot].priority = 0;
   free(ProcTable[procSlot].stack);
   ProcTable[procSlot].stackSize = 0;
   ProcTable[procSlot].procSlot = -1;
+  ProcTable[procSlot].nextProcPtr = NULL;
+  ProcTable[procSlot].childProcPtr = NULL;
+  ProcTable[procSlot].nextSiblingPtr = NULL;
+  ProcTable[procSlot].parentPtr = NULL;
+  ProcTable[procSlot].zapPtr = NULL;
+}
+
+void unBlockZappers(int procSlot)
+{
+  if (DEBUG && debugflag){
+    USLOSS_Console("unBlockZappers():\n");
+  }
+  if (ProcTable[procSlot].zapPtr != NULL){
+    procPtr temp, next;
+    temp = ProcTable[procSlot].zapPtr;
+    addToReadyList(temp);
+    while (temp->nextZapPtr != NULL){
+      next = temp->nextZapPtr;
+      temp->nextZapPtr = NULL;
+      temp = next;
+      addToReadyList(next);
+    }
+  }
 }
 
 /* ------------------------------------------------------------------------
@@ -449,6 +477,7 @@ void quitProcTableEntry(int procSlot)
    ----------------------------------------------------------------------- */
 void dispatcher(void)
 {
+  int a;
   if (DEBUG && debugflag) {
     USLOSS_Console("dispatcher(): Dispatching process\n");
   }
@@ -457,6 +486,7 @@ void dispatcher(void)
   if (Current != NULL && Current->parentPtr != NULL && Current->parentPtr->status == S_JOIN_BLOCKED && Current->status < 0){
     procPtr old = Current;
     Current = Current->parentPtr;
+    a = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, USLOSS_CLOCK_INT, &Current->startTime);
     USLOSS_ContextSwitch(&old->state, &Current->state);
   }
 
@@ -467,7 +497,12 @@ void dispatcher(void)
         nextProcess = ReadyLists[i].head;
         ReadyLists[i].head = nextProcess->nextProcPtr;
         ReadyLists[i].size--;
-        break;
+        if (ReadyLists[i].size == 0){
+          ReadyLists[i].head = NULL;
+        }
+        if (nextProcess != NULL && nextProcess->status == S_READY){
+          break;
+        }
       } 
     }
   }
@@ -484,13 +519,16 @@ void dispatcher(void)
 
     if (Current == NULL){
       Current = nextProcess;
+      a = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, USLOSS_CLOCK_INT, &nextProcess->startTime);
       USLOSS_ContextSwitch(NULL, &nextProcess->state);
-    } else {
+    } 
+    else {
       if (Current->status == 2) {
         addToReadyList(Current);
       }
       procPtr old = Current;
       Current = nextProcess;
+      a = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, USLOSS_CLOCK_INT, &nextProcess->startTime);
       USLOSS_ContextSwitch(&old->state, &nextProcess->state);
     }
   }
@@ -503,8 +541,20 @@ void dispatcher(void)
    Parameters - none
    Returns - nothing
    ----------------------------------------------------------------------- */    
-void clockHandler(){
-  // does nothing!
+void clockHandler()
+{
+  if (Current != NULL){
+    timeSlice();
+  }
+}
+
+void timeSlice()
+{
+  int currentTime, a;
+  a = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, USLOSS_CLOCK_INT, &currentTime);
+  if (Current->startTime - currentTime >= 80000){
+    dispatcher();
+  }
 }
 
 /* ------------------------------------------------------------------------
@@ -518,7 +568,7 @@ void addToReadyList(procPtr toBeAdded)
   if (DEBUG && debugflag) {
     USLOSS_Console("addToReadyList(): Adding process %s with pid:%i and priority:%i\n", toBeAdded->name, toBeAdded->pid, toBeAdded->priority);
   }
-  toBeAdded->status = 1;
+  toBeAdded->status = S_READY;
   int adjustedPriority = toBeAdded->priority-1;
   if (ReadyLists[adjustedPriority].size == 0) {
       ReadyLists[adjustedPriority].head = toBeAdded;
@@ -526,8 +576,10 @@ void addToReadyList(procPtr toBeAdded)
   }
   else {
     procPtr temp = ReadyLists[adjustedPriority].head;
-    while(temp->nextProcPtr != NULL){
+    int i = 0;
+    while(temp->nextProcPtr != NULL && temp->nextProcPtr->status == S_READY && i < ReadyLists[adjustedPriority].size){
       temp = temp->nextProcPtr;
+      i++;
     }
     temp->nextProcPtr = toBeAdded;
     ReadyLists[adjustedPriority].size++;
@@ -564,9 +616,9 @@ void dumpProcesses()
     if (ProcTable[i].status != 0){
       USLOSS_Console(" %i\t", ProcTable[i].pid);
       if(ProcTable[i].parentPtr != NULL){
-        USLOSS_Console(" %i\t", ProcTable[i].parentPtr->pid);
+        USLOSS_Console("  %i\t", ProcTable[i].parentPtr->pid);
       } else {
-        USLOSS_Console(" -2\t");
+        USLOSS_Console("  -2\t");
       }
       USLOSS_Console("   %i\t\t", ProcTable[i].priority);
       if(ProcTable[i].status == 1){
@@ -576,23 +628,87 @@ void dumpProcesses()
       } else if (ProcTable[i].status == 3){
         USLOSS_Console("JOIN_BLOCKED");
       } else if (ProcTable[i].status == 4){
-        USLOSS_Console("ZAPPED\t");
+        USLOSS_Console("ZAPPING\t");
+      } else if (ProcTable[i].status >= 10){
+        USLOSS_Console("BLOCKME\t");
+      } else {
+        USLOSS_Console("%i\t", ProcTable[i].status);
       }
       USLOSS_Console("\t  0\t");
-      USLOSS_Console("   -1\t");
+      USLOSS_Console("   %d\t", ProcTable[i].startTime);
       USLOSS_Console("%s\n", ProcTable[i].name);
     }
+    else {
+      USLOSS_Console(" %i\t", -1);
+      USLOSS_Console("  %i\t", -1);
+      USLOSS_Console("   %i\t", -1);
+      USLOSS_Console("\tEMPTY\t");
+      USLOSS_Console("\t  0\t");
+      USLOSS_Console("   -1\t");
+      USLOSS_Console("\n");
+    }
   }
+}
+
+int blockMe(int newStatus)
+{
+  if (Current == NULL){
+    USLOSS_Console("FATAL ERROR: CURRENT == NULL at blockMe()\n");
+    USLOSS_Halt(1);
+  }
+  if (DEBUG && debugflag){
+    USLOSS_Console("blockMe(): blocking process %s with pid %i\n", Current->name, Current->pid);
+  }
+
+  if (newStatus <= 10){
+    USLOSS_Console("blockMe(): newStatus must be > 10. Halting...\n");
+    USLOSS_Halt(1);
+  }
+
+  Current->status = newStatus;
+  dispatcher();
+  if(isZapped()){
+    return -1;
+  }
+
+  return 0;
+}
+
+int unblockProc(int pid)
+{
+  if (DEBUG && debugflag){
+    USLOSS_Console("unBlockProc(): unblocking process %i\n", pid);
+  }
+
+  if (ProcTable[pid].status <= 10){
+    return -2;
+  } else {
+    addToReadyList(&ProcTable[pid]);
+  }
+
+  dispatcher();
+
+  if (isZapped()){
+    return -1;
+  } 
+  return 0;
 }
 
 /* check to determine if deadlock has occurred... */
 int checkDeadlock()
 {
-  for (int i = 0; i < MAXPROC; i++) {
-  if(ProcTable[i].status == 1 || ProcTable[i].status > 2) {
-    return 1;
+  if(processTableCounter != 1){
+    for (int i = 0; i < MAXPROC; i++){
+      procPtr temp;
+      temp = &ProcTable[i];
+      if(temp->priority != 6 && temp->priority > 2){
+        USLOSS_Console("checkDeadlock(): numProc = %i. Only Sentinel should be left. Halting...\n", processTableCounter);
+        USLOSS_Halt(1);
+        return 1;
+      }
+    }
   }
-  }
+  
   USLOSS_Console("All processes completed.\n");
   USLOSS_Halt(0);
   return 0;
@@ -627,34 +743,46 @@ void disableInterrupts()
 int zap(int pid)
 {
 	if(DEBUG && debugflag)
-		USLOSS_Console("zap(): Zapping process");
+		USLOSS_Console("zap(): Zapping process %i\n", pid);
 	if(Current != NULL)
 	{
 		if(Current->pid == pid)
 		{
-			USLOSS_Console("zap(): process with pid %d is trying to call itself. Halting...\n");
+			USLOSS_Console("zap(): process %i tried to zap itself.  Halting...\n", pid);
 			USLOSS_Halt(1);
 			return -1;
 		}
-
-		int p = 0;
-		for(p = 0; p < MAXPROC; p++)
-		{
-			if(ProcTable[p].pid == pid)
-			{
-				ProcTable[p].status = S_ZAPPED;
-				while(ProcTable[p].status != S_QUIT)
-					Current->status = S_BLOCKED;
-				ProcTable[p].status = S_READY;
-			}
-		}
-
-		if(p == MAXPROC)
-		{
-			USLOSS_Console("zap(): process with pid %d does not exist in the table. Halting...\n");
-			USLOSS_Halt(1);
-			return -1;
-		}
+    if(ProcTable[pid].status == 0){
+      USLOSS_Console("zap(): process being zapped does not exist.  Halting...\n");
+      USLOSS_Halt(1);
+      return -1;
+    }
+    if(ProcTable[pid].status < 0){
+      if(isZapped()){
+        return -1;
+      }
+      return 0;
+    }
+    for (int i = 0; i < MAXPROC; i++){
+      if (ProcTable[i].pid == pid){
+        ProcTable[i].zapped = 1;
+        Current->status = S_ZAPPING;
+        if (ProcTable[i].zapPtr == NULL){
+          ProcTable[i].zapPtr = Current;
+        } else {
+          procPtr temp;
+          temp = ProcTable[i].zapPtr;
+          while (temp->nextZapPtr != NULL){
+            temp = temp->nextZapPtr;
+          }
+          temp->nextZapPtr = Current;
+        }
+        dispatcher();
+        if(isZapped()){
+          return -1;
+        }
+      } 
+    }
 	}
 	return 0;
 }
@@ -664,7 +792,11 @@ int zap(int pid)
 */
 int isZapped()
 {
-	if(Current->status == S_ZAPPED)
-		return 1;
-	return 0;
+  if (DEBUG && debugflag){
+    USLOSS_Console("isZapped(): starting");
+  }
+  if (Current != NULL){
+    return Current->zapped;
+  }
+  return -1;
 }

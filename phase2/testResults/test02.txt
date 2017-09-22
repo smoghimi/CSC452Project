@@ -1,0 +1,12 @@
+start2(): started, trying to create too many mailboxes...
+start2(): MailBoxCreate returned id less than zero, id = -1
+start2(): MailBoxCreate returned id less than zero, id = -1
+start2(): MailBoxCreate returned id less than zero, id = -1
+start2(): MailBoxCreate returned id less than zero, id = -1
+start2(): MailBoxCreate returned id less than zero, id = -1
+start2(): MailBoxCreate returned id less than zero, id = -1
+start2(): MailBoxCreate returned id less than zero, id = -1
+start2(): MailBoxCreate returned id less than zero, id = -1
+start2(): MailBoxCreate returned id less than zero, id = -1
+start2(): MailBoxCreate returned id less than zero, id = -1
+All processes completed.

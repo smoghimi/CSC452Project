@@ -1,0 +1,20 @@
+start2(): started
+
+start2(): MboxCreate returned id = 7
+XXp1(): started
+XXp1(): sending message #0 to mailbox 7
+XXp2(): started
+XXp2(): receiving message #0 from mailbox 7
+XXp1(): after send of message #0, result = 0
+XXp1(): sending message #1 to mailbox 7
+XXp2(): after receipt of message #0, result = 16
+        message = `hello there, #0'
+XXp2(): receiving message #1 from mailbox 7
+XXp1(): after send of message #1, result = 0
+
+start2(): joined with kid 4, status = -3
+XXp2(): after receipt of message #1, result = 16
+        message = `hello there, #1'
+
+start2(): joined with kid 5, status = -4
+All processes completed.

@@ -1,0 +1,43 @@
+start2(): started
+start2(): MboxCreate returned id = 7
+
+XXp3(): started, about to send 5 messages to the mailbox
+XXp3(): sending message #1 to mailbox 7
+XXp3(): sending message #2 to mailbox 7
+XXp3(): sending message #3 to mailbox 7
+XXp3(): sending message #4 to mailbox 7
+XXp3(): sending message #5 to mailbox 7
+
+XXp3(): fork'ing XXp2 at priority 4
+XXp2(): started
+XXp2(): priority 4, sending message to mailbox 7
+
+XXp3(): fork'ing XXp2 at priority 3
+XXp2(): started
+XXp2(): priority 3, sending message to mailbox 7
+
+XXp3(): fork'ing XXp2 at priority 2
+XXp2(): started
+XXp2(): priority 2, sending message to mailbox 7
+
+XXp3(): fork'ing XXp1 at priority 1
+XXp1(): started
+XXp1(): received message #1 containing: First message
+XXp1(): received message #2 containing: Second message
+XXp1(): received message #3 containing: Third message
+XXp1(): received message #4 containing: Fourth message
+XXp1(): received message #5 containing: Fifth message
+XXp1(): received message #6 containing: Sixth message
+XXp1(): received message #7 containing: Seventh message
+XXp1(): received message #8 containing: Eighth message
+XXp1(): done sending, now quitting
+
+XXp2(): priority 2, after sending message, result = 0
+XXp2(): priority 3, after sending message, result = 0
+XXp2(): priority 4, after sending message, result = 0
+XXp3(): join'd with child 8 whose status is -1
+XXp3(): join'd with child 7 whose status is -2
+XXp3(): join'd with child 6 whose status is -3
+XXp3(): join'd with child 5 whose status is -4
+start2(): joined with kid 4, status = -5
+All processes completed.
