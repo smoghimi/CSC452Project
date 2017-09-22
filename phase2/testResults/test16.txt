@@ -1,0 +1,3 @@
+start2(): started, trying to exceed mailslots...
+No slots available: mailbox 45 and slot 25
+All processes completed.
