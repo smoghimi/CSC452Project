@@ -16,6 +16,9 @@
 
 /* ------------------------- Prototypes ----------------------------------- */
 extern int start2 (char *);
+int waitDevice(int, int, int *);
+int UnblockReceiver(int);
+int UnblockSender(int);
 int MboxRelease(int);
 int start1 (char *);
 int check_io();
@@ -23,13 +26,10 @@ int check_io();
 void AddToReceiveBlockList(int, int);
 void AddToSendBlockList(int, int);
 void check_kernel_mode(char *);
-int UnblockReceiver(int);
 void disableInterrupts();
-int UnblockSender(int);
 void enableInterrupts();
 
 /* -------------------------- Globals ------------------------------------- */
-
 int debugflag2 = 0;
 
 // the mail boxes 
@@ -40,12 +40,9 @@ int nextMboxID = 0;
 // also need array of mail slots, array of function ptrs to system call 
 // handlers, ...
 
-
-
-
 /* -------------------------- Functions ----------------------------------- */
 
-/* ------------------------------------------------------------------------
+/* start1-----------------------------------------------------------------
    Name - start1
    Purpose - Initializes mailboxes and interrupt vector.
              Start the phase2 test process.
@@ -88,7 +85,7 @@ int start1(char *arg)
 } /* start1 */
 
 
-/* ------------------------------------------------------------------------
+/* MboxCreate-------------------------------------------------------------
    Name - MboxCreate
    Purpose - gets a free mailbox from the table of mailboxes and initializes it 
    Parameters - maximum number of slots in the mailbox and the max size of a msg
@@ -116,13 +113,13 @@ int MboxCreate(int slots, int slot_size)
     return -1;
   }
 
-  while (MailBoxTable[nextMboxID%MAXMBOX].status != EMPTY || (MailBoxTable[nextMboxID%MAXMBOX].status == RELEASED && MailBoxTable[nextMboxID%MAXMBOX].blockCount == 0)){
+  while (MailBoxTable[nextMboxID%MAXMBOX].status != EMPTY || (MailBoxTable[nextMboxID%MAXMBOX].status == RELEASED && MailBoxTable[nextMboxID%MAXMBOX].r_blockCount == 0 && MailBoxTable[nextMboxID%MAXMBOX].s_blockCount == 0)){
     nextMboxID++;
   }
   slot = nextMboxID%MAXMBOX;
   boxPtr box = &MailBoxTable[slot];
   box->status = TAKEN;
-  box->numSlots = slots;
+  box->numSlots = slots;    
   box->slot_size = slot_size;
   box->mboxID = slot;
 
@@ -146,7 +143,7 @@ int MboxCreate(int slots, int slot_size)
 } /* MboxCreate */
 
 
-/* ------------------------------------------------------------------------
+/* MboxSend---------------------------------------------------------------
    Name - MboxSend
    Purpose - Put a message into a slot for the indicated mailbox.
              Block the sending process if no slot available.
@@ -173,15 +170,24 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
   }
 
   boxPtr mb = &MailBoxTable[mbox_id%MAXMBOX];
+
+  // No blocked receivers && zero slot mbox
+
+  // blocked receiver && zero slot
+  if (mb->numSlots == 0 && mb->r_blockCount != 0){
+    UnblockReceiver(mbox_id);
+    return 0;
+  }
+
   if (mb->filledSlots == mb->numSlots){
     int callerPID = getpid();
     AddToSendBlockList(mbox_id, callerPID);
-    mb->blockCount++;
+    mb->s_blockCount++;
     blockMe(SEND_BLOCKED);
-    mb->blockCount--;
+    mb->s_blockCount--;
   }
 
-  if (mb->status == RELEASED){
+  if (mb->status == RELEASED || isZapped()){
     return -3;
   }
 
@@ -199,8 +205,37 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
   return 0;
 } /* MboxSend */
 
+/* MboxCondSend-----------------------------------------------------------
+   Name - MboxCondSend
+   Purpose - Put a message into a slot for the indicated mailbox.
+             Block the sending process if no slot available.
+   Parameters - mailbox id, pointer to data of msg, # of bytes in msg.
+   Returns - zero if successful, -1 if invalid args.
+   Side Effects - none.
+   ----------------------------------------------------------------------- */
+int MboxCondSend(int mbox_id, void * message, int msg_size)
+{
+  if (DEBUG2 && debugflag2){
+    USLOSS_Console("MboxCondSend(): Attempting to conditionally send to mbox: %i\n", mbox_id);
+  }
 
-/* MboxReceive-------------------------------------------------------------
+  int index = mbox_id % MAXMBOX;
+  boxPtr box = &MailBoxTable[index];
+  if (box != NULL && box->status == TAKEN){
+    if (box->filledSlots == box->numSlots){
+      return -2;
+    } else {
+      MboxSend(mbox_id, message, msg_size);
+      return 0;
+    }
+  } else {
+    USLOSS_Halt(1);
+    return -1;
+  }
+  return 0;
+}
+
+/* MboxReceive------------------------------------------------------------
    Purpose - Get a msg from a slot of the indicated mailbox.
              Block the receiving process if no msg available.
    Parameters - mailbox id, pointer to put data of msg, max # of bytes that
@@ -226,13 +261,28 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
   }
 
   boxPtr box = &MailBoxTable[index];
+
+  // Zero slot mbox && 0 s blocked
+  if (box->numSlots == 0 && box->s_blockCount == 0){
+    int callerPID = getpid();
+    box->r_blockCount++;
+    AddToReceiveBlockList(mbox_id, callerPID);
+    blockMe(RECEIVE_BLOCKED);
+    box->r_blockCount--;
+    return 0;
+  }
+
+  if (box->status == RELEASED || isZapped()){
+    return -3;
+  }
+
   if (box->filledSlots == 0){
     int callerPID;
     callerPID = getpid();
     AddToReceiveBlockList(mbox_id, callerPID);
-    box->blockCount++;
+    box->r_blockCount++;
     blockMe(RECEIVE_BLOCKED);
-    box->blockCount--;
+    box->r_blockCount--;
   }
 
   if (box->status == RELEASED){
@@ -273,7 +323,38 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
   return returnValue;
 } /* MboxReceive */
 
-/* MboxRelease-------------------------------------------------------------
+/* MboxCondReceive--------------------------------------------------------
+   Purpose - Get a msg from a slot of the indicated mailbox.
+             Block the receiving process if no msg available.
+   Parameters - mailbox id, pointer to put data of msg, max # of bytes that
+                can be received.
+   Returns - actual size of msg if successful, -1 if invalid args.
+   Side Effects - none.
+   ----------------------------------------------------------------------- */
+int MboxCondReceive(int mbox_id, void * msg_ptr, int msg_size)
+{
+  if (DEBUG2 && debugflag2){
+    USLOSS_Console("MboxCondReceive(): conditionally receiving from mbox %i\n", mbox_id);
+  }
+
+  int index = mbox_id%MAXMBOX;
+  boxPtr box = &MailBoxTable[index];
+  if (box != NULL && box->status == TAKEN){
+    if (box->filledSlots == 0){
+      return -2;
+    }
+    else {
+      return MboxReceive(mbox_id, msg_ptr, msg_size);
+    }
+  } 
+  else {
+    USLOSS_Halt(1);
+    return -1;
+  }
+  return 0;
+} /* MboxCondReceive */
+
+/* MboxRelease------------------------------------------------------------
    Purpose - Get a msg from a slot of the indicated mailbox.
              Block the receiving process if no msg available.
    Parameters - mailbox id, pointer to put data of msg, max # of bytes that
@@ -299,9 +380,9 @@ int MboxRelease(int mbox_id)
   while (UnblockReceiver(mbox_id)) {}
 
   return 0;
-}
+} /* MboxRelease */
 
-/* AddSendToBlockList------------------------------------------------------
+/* AddSendToBlockList-----------------------------------------------------
    Name - AddToBlockList
    Purpose - Adds a process to a mailboxes block list if it is waiting for
               a receive.
@@ -329,7 +410,7 @@ void AddToSendBlockList(int mbox_id, int pid)
       temp->nextBlocked->blockedID = pid;
     }
   } 
-}
+} /* AddSendToBlockList */
 
 /* UnblockSender----------------------------------------------------------
    Name - UnblockSender
@@ -354,9 +435,9 @@ int UnblockSender(int mbox_id)
   else {
     return 0;
   }
-}
+} /* UnblockSender */
 
-/* AddReceiveToBlockList---------------------------------------------------------
+/* AddToReceiveBlockList--------------------------------------------------
    Name - AddToBlockList
    Purpose - Adds a process to a mailboxes block list if it is waiting for
               a receive.
@@ -384,7 +465,7 @@ void AddToReceiveBlockList(int mbox_id, int pid)
       temp->nextBlocked->blockedID = pid;
     }
   } 
-}
+} /* AddToReceiveBlockList */
 
 /* UnblockReceiver--------------------------------------------------------
    Name - UnblockReceiver
@@ -402,13 +483,22 @@ int UnblockReceiver(int mbox_id)
   boxPtr box = &MailBoxTable[index];
   if (box->receive_blocked != NULL){
     int unblockPID = box->receive_blocked->blockedID;
-    box->receive_blocked = box->receive_blocked->nextBlocked;
+    if (box->receive_blocked->nextBlocked == NULL){
+      box->receive_blocked = NULL;
+    } else {
+      box->receive_blocked = box->receive_blocked->nextBlocked;
+    }
     unblockProc(unblockPID);
     return 1;
   } 
   else {
     return 0;
   }
+} /* UnblockReceiver */
+
+int waitDevice(int type, int unit, int * status)
+{
+  
 }
 
 void check_kernel_mode(char *name)
