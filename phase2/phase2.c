@@ -116,7 +116,7 @@ int MboxCreate(int slots, int slot_size)
     return -1;
   }
 
-  while (MailBoxTable[nextMboxID%MAXMBOX].status != EMPTY){
+  while (MailBoxTable[nextMboxID%MAXMBOX].status != EMPTY || (MailBoxTable[nextMboxID%MAXMBOX].status == RELEASED && MailBoxTable[nextMboxID%MAXMBOX].blockCount == 0)){
     nextMboxID++;
   }
   slot = nextMboxID%MAXMBOX;
@@ -176,7 +176,9 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
   if (mb->filledSlots == mb->numSlots){
     int callerPID = getpid();
     AddToSendBlockList(mbox_id, callerPID);
+    mb->blockCount++;
     blockMe(SEND_BLOCKED);
+    mb->blockCount--;
   }
 
   if (mb->status == RELEASED){
@@ -228,7 +230,9 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
     int callerPID;
     callerPID = getpid();
     AddToReceiveBlockList(mbox_id, callerPID);
+    box->blockCount++;
     blockMe(RECEIVE_BLOCKED);
+    box->blockCount--;
   }
 
   if (box->status == RELEASED){
@@ -294,7 +298,6 @@ int MboxRelease(int mbox_id)
   while (UnblockSender(mbox_id)) {}
   while (UnblockReceiver(mbox_id)) {}
 
-  MailBoxTable[index].status = EMPTY;
   return 0;
 }
 

@@ -31,6 +31,7 @@ struct mailbox {
     slotPtr   slots;
     blockPtr  receive_blocked; 
     blockPtr  send_blocked; 
+    int       blockCount;
     // other items as needed...
 };
 
