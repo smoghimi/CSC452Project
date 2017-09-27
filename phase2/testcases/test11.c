@@ -1,4 +1,3 @@
-
 /* Creates a 5-slot mailbox. Creates XXp1 that conditionally sends eight hello
  * messages to the mailbox, five of which should succeed and three will return
  * -2.  XXp1 then blocks on a receive on its private mailbox.
