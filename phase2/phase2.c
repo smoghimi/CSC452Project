@@ -28,12 +28,16 @@ void AddToSendBlockList(int, int);
 void check_kernel_mode(char *);
 void disableInterrupts();
 void enableInterrupts();
+void clockHandler();
+void diskHandler();
+void termHandler();
 
 /* -------------------------- Globals ------------------------------------- */
 int debugflag2 = 0;
 
 // the mail boxes 
 mailbox MailBoxTable[MAXMBOX];
+int clockTimer = 5;
 int mboxCount = 0;
 int nextMboxID = 0;
 
@@ -64,10 +68,12 @@ int start1(char *arg)
     // Initialize USLOSS_IntVec and system call handlers,
     // allocate mailboxes for interrupt handlers.  Etc... 
     for (int i = 0; i < 7; i++){
-      MailBoxTable[i].status = TAKEN;
-      MailBoxTable[i].mboxID = nextMboxID++;
-      mboxCount++;
+      MboxCreate(0, 50);
     }
+
+    USLOSS_IntVec[USLOSS_CLOCK_INT] = clockHandler;
+    USLOSS_IntVec[USLOSS_DISK_INT] = diskHandler;
+    USLOSS_IntVec[USLOSS_TERM_INT] = termHandler;
 
     enableInterrupts();
 
@@ -175,6 +181,9 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
 
   // blocked receiver && zero slot
   if (mb->numSlots == 0 && mb->r_blockCount != 0){
+    if (msg_ptr != NULL){
+      memcpy(mb->slots->message, msg_ptr, msg_size);      
+    }
     UnblockReceiver(mbox_id);
     return 0;
   }
@@ -269,6 +278,9 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
     AddToReceiveBlockList(mbox_id, callerPID);
     blockMe(RECEIVE_BLOCKED);
     box->r_blockCount--;
+    if (box->slots->message != NULL && msg_size != 0){
+      memcpy(msg_ptr, box->slots->message, strlen(msg_ptr)+1);      
+    }
     return 0;
   }
 
@@ -496,10 +508,60 @@ int UnblockReceiver(int mbox_id)
   }
 } /* UnblockReceiver */
 
+/* waitDevice-------------------------------------------------------------
+   Name - waitDevice
+   Purpose - Unblocks a blocked process (if there is one) that is waiting
+              to receive a message from mailbox mbox_id.
+   Parameters - type, unit, status.
+   ----------------------------------------------------------------------- */
 int waitDevice(int type, int unit, int * status)
 {
-  
-}
+  if (type == USLOSS_CLOCK_INT){
+    MboxReceive(CLOCK_MBOX, &status, MAX_MESSAGE);
+  }
+  else if (type == USLOSS_TERM_INT){
+    MboxReceive(unit, status, MAX_MESSAGE);
+  } 
+  else if (type == USLOSS_DISK_INT){
+    MboxReceive(unit, status, MAX_MESSAGE);
+  }
+  if (isZapped()){
+    return -1;
+  }
+  return 0;
+} /* waitDevice */
+
+/* clockHandler-----------------------------------------------------------
+   Name - clockHandler
+   Purpose - Handles clock interrupts.
+   ----------------------------------------------------------------------- */
+void clockHandler()
+{
+  timeSlice();
+  if (clockTimer%5 == 0){
+    int status, a;
+    a = USLOSS_DeviceInput(USLOSS_CLOCK_INT, USLOSS_CLOCK_INT, &status);
+    MboxSend(CLOCK_MBOX, &status, 6);
+    clockTimer = 5;
+  }
+  clockTimer--;
+} /* clockHandler */
+
+/* diskHandler------------------------------------------------------------
+   Name - diskHandler
+   Purpose - Handles clock interrupts.
+   ----------------------------------------------------------------------- */
+void diskHandler()
+{
+} /* diskHandler */
+
+/* termHandler------------------------------------------------------------
+   Name - termHandler
+   Purpose - Handles clock interrupts.
+   ----------------------------------------------------------------------- */
+void termHandler()
+{
+} /* termHandler */
 
 void check_kernel_mode(char *name)
 {
@@ -521,8 +583,18 @@ void enableInterrupts()
 
 }
 
+/* check_io---------------------------------------------------------------
+   Name - check_io
+   Purpose - checks if there are any devices blocked on io.
+   ----------------------------------------------------------------------- */
 int check_io()
 {
+  for (int i = 0; i < 7; i++){
+    if (MailBoxTable[i].r_blockCount > 0){
+      return 1;
+    }
+  }
   return 0;
-}
+} /* check_io */
+
 

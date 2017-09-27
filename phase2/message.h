@@ -9,6 +9,15 @@ typedef struct mboxProc     *mboxProcPtr;
 typedef struct blockList    *blockPtr;
 typedef struct blockList    blockList;
 
+// io mailboxes
+#define     CLOCK_MBOX  0
+#define     TERM1       1
+#define     TERM2       2
+#define     TERM3       3
+#define     TERM4       4
+#define     DISK1       5
+#define     DISK2       6
+
 // Process Mailbox blocks:
 #define     RECEIVE_BLOCKED 55
 #define     SEND_BLOCKED    56
