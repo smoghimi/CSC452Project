@@ -104,6 +104,8 @@ int MboxCreate(int slots, int slot_size)
 {
   int slot = -1;
 
+  check_kernel_mode("MboxCreate");
+
   if (mboxCount >= MAXMBOX){
     return -1;
   }
@@ -159,6 +161,8 @@ int MboxCreate(int slots, int slot_size)
    ----------------------------------------------------------------------- */
 int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
 {
+  check_kernel_mode("MboxSend");
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("MboxSend(): Sending a message to %i\n", mbox_id);
   }
@@ -224,6 +228,8 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
    ----------------------------------------------------------------------- */
 int MboxCondSend(int mbox_id, void * message, int msg_size)
 {
+  check_kernel_mode("MboxCondSend");
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("MboxCondSend(): Attempting to conditionally send to mbox: %i\n", mbox_id);
   }
@@ -254,6 +260,8 @@ int MboxCondSend(int mbox_id, void * message, int msg_size)
    ----------------------------------------------------------------------- */
 int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
 {
+  check_kernel_mode("MboxRecieve");
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("MboxReceive(): Starting MboxReceive with mbox_id %i\n", mbox_id);
   }
@@ -345,6 +353,8 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
    ----------------------------------------------------------------------- */
 int MboxCondReceive(int mbox_id, void * msg_ptr, int msg_size)
 {
+  check_kernel_mode("MboxCondReceive");
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("MboxCondReceive(): conditionally receiving from mbox %i\n", mbox_id);
   }
@@ -376,6 +386,8 @@ int MboxCondReceive(int mbox_id, void * msg_ptr, int msg_size)
    ----------------------------------------------------------------------- */
 int MboxRelease(int mbox_id)
 {
+  check_kernel_mode("MboxRelease");
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("MboxRelease(): Releasing mbox %i\n", mbox_id);
   }
@@ -402,6 +414,8 @@ int MboxRelease(int mbox_id)
    ----------------------------------------------------------------------- */
 void AddToSendBlockList(int mbox_id, int pid)
 {
+  check_kernel_mode("AddToSendBlockList");
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("AddToSendBlockList(): Adding pid:%i to mailbox:%i block list.\n", pid, mbox_id);
   }
@@ -432,6 +446,7 @@ void AddToSendBlockList(int mbox_id, int pid)
    ----------------------------------------------------------------------- */
 int UnblockSender(int mbox_id)
 {
+  check_kernel_mode("UnblockSender");
   if (DEBUG2 && debugflag2){
     USLOSS_Console("UnblockReceiver(): Unblocking first process at mailbox:%i\n", mbox_id);
   }
@@ -457,6 +472,7 @@ int UnblockSender(int mbox_id)
    ----------------------------------------------------------------------- */
 void AddToReceiveBlockList(int mbox_id, int pid)
 {
+  check_kernel_mode("AddToReceiveBlockList");
   if (DEBUG2 && debugflag2){
     USLOSS_Console("AddToBlockList(): Adding pid:%i to mailbox:%i block list.\n", pid, mbox_id);
   }
@@ -487,6 +503,7 @@ void AddToReceiveBlockList(int mbox_id, int pid)
    ----------------------------------------------------------------------- */
 int UnblockReceiver(int mbox_id)
 {
+  check_kernel_mode("UnblockReceiver");
   if (DEBUG2 && debugflag2){
     USLOSS_Console("UnblockReceiver(): Unblocking first process at mailbox:%i\n", mbox_id);
   }
@@ -516,6 +533,7 @@ int UnblockReceiver(int mbox_id)
    ----------------------------------------------------------------------- */
 int waitDevice(int type, int unit, int * status)
 {
+  check_kernel_mode("waitDevice");
   if (type == USLOSS_CLOCK_INT){
     MboxReceive(CLOCK_MBOX, &status, MAX_MESSAGE);
   }
@@ -537,6 +555,7 @@ int waitDevice(int type, int unit, int * status)
    ----------------------------------------------------------------------- */
 void clockHandler()
 {
+  check_kernel_mode("clockHandler");
   timeSlice();
   if (clockTimer%5 == 0){
     int status, a;
@@ -553,6 +572,7 @@ void clockHandler()
    ----------------------------------------------------------------------- */
 void diskHandler()
 {
+  check_kernel_mode("diskHandler");
 } /* diskHandler */
 
 /* termHandler------------------------------------------------------------
@@ -561,6 +581,7 @@ void diskHandler()
    ----------------------------------------------------------------------- */
 void termHandler()
 {
+  check_kernel_mode("termHandler");
 } /* termHandler */
 
 void check_kernel_mode(char *name)
@@ -589,6 +610,8 @@ void enableInterrupts()
    ----------------------------------------------------------------------- */
 int check_io()
 {
+  check_kernel_mode("ceck_io");
+
   for (int i = 0; i < 7; i++){
     if (MailBoxTable[i].r_blockCount > 0){
       return 1;
