@@ -572,6 +572,8 @@ void clockHandler()
    ----------------------------------------------------------------------- */
 void diskHandler()
 {
+  int status, a;
+  a = USLOSS_DeviceInput(USLOSS_DISK_INT, USLOSS_DISK_INT, &status);
   check_kernel_mode("diskHandler");
 } /* diskHandler */
 
@@ -581,6 +583,8 @@ void diskHandler()
    ----------------------------------------------------------------------- */
 void termHandler()
 {
+  int status, a;
+  a = USLOSS_DeviceInput(USLOSS_TERM_INT, USLOSS_TERM_INT, &status);
   check_kernel_mode("termHandler");
 } /* termHandler */
 
