@@ -559,7 +559,7 @@ void clockHandler()
   timeSlice();
   if (clockTimer%5 == 0){
     int status, a;
-    a = USLOSS_DeviceInput(USLOSS_CLOCK_INT, USLOSS_CLOCK_INT, &status);
+    a = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, USLOSS_CLOCK_INT, &status);
     MboxSend(CLOCK_MBOX, &status, 6);
     clockTimer = 5;
   }
@@ -569,11 +569,12 @@ void clockHandler()
 /* diskHandler------------------------------------------------------------
    Name - diskHandler
    Purpose - Handles clock interrupts.
-   ----------------------------------------------------------------------- */
+...zzzzzzz   ----------------------------------------------------------------------- */
 void diskHandler()
 {
   int status, a;
-  a = USLOSS_DeviceInput(USLOSS_DISK_INT, USLOSS_DISK_INT, &status);
+  a = USLOSS_DeviceInput(USLOSS_DISK_DEV, USLOSS_DISK_INT, &status);
+  MboxSend(USLOSS_DISK_DEV, &status, 6);
   check_kernel_mode("diskHandler");
 } /* diskHandler */
 
@@ -584,7 +585,8 @@ void diskHandler()
 void termHandler()
 {
   int status, a;
-  a = USLOSS_DeviceInput(USLOSS_TERM_INT, USLOSS_TERM_INT, &status);
+  a = USLOSS_DeviceInput(USLOSS_TERM_DEV, USLOSS_TERM_INT, &status);
+  MboxSend(USLISS_TERM_DEV, &status, 6);
   check_kernel_mode("termHandler");
 } /* termHandler */
 
