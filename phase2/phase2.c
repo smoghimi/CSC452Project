@@ -559,7 +559,7 @@ void clockHandler()
   timeSlice();
   if (clockTimer%5 == 0){
     int status, a;
-    a = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, USLOSS_CLOCK_INT, &status);
+    a = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, USLOSS_CLOCK_UNITS, &status);
     MboxSend(CLOCK_MBOX, &status, 6);
     clockTimer = 5;
   }
@@ -573,8 +573,8 @@ void clockHandler()
 void diskHandler()
 {
   int status, a;
-  a = USLOSS_DeviceInput(USLOSS_DISK_DEV, USLOSS_DISK_INT, &status);
-  MboxSend(USLOSS_DISK_DEV, &status, 6);
+  a = USLOSS_DeviceInput(USLOSS_DISK_DEV, USLOSS_DISK_UNITS, &status);
+  MboxSend(DISK1, &status, 6);
   check_kernel_mode("diskHandler");
 } /* diskHandler */
 
@@ -585,8 +585,8 @@ void diskHandler()
 void termHandler()
 {
   int status, a;
-  a = USLOSS_DeviceInput(USLOSS_TERM_DEV, USLOSS_TERM_INT, &status);
-  MboxSend(USLISS_TERM_DEV, &status, 6);
+  a = USLOSS_DeviceInput(USLOSS_TERM_DEV, USLOSS_TERM_UNITS, &status);
+  MboxSend(TERM1, &status, 6);
   check_kernel_mode("termHandler");
 } /* termHandler */
 
