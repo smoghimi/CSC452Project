@@ -106,6 +106,7 @@ int start1(char *arg)
    ----------------------------------------------------------------------- */
 int MboxCreate(int slots, int slot_size)
 {
+  disableInterrupts();
   int slot = -1;
 
   if (mboxCount >= MAXMBOX){
@@ -123,7 +124,10 @@ int MboxCreate(int slots, int slot_size)
     return -1;
   }
 
-  while (MailBoxTable[nextMboxID%MAXMBOX].status != EMPTY || (MailBoxTable[nextMboxID%MAXMBOX].status == RELEASED && MailBoxTable[nextMboxID%MAXMBOX].r_blockCount == 0 && MailBoxTable[nextMboxID%MAXMBOX].s_blockCount == 0)){
+  while (MailBoxTable[nextMboxID%MAXMBOX].status != EMPTY){
+    if (MailBoxTable[nextMboxID%MAXMBOX].status == RELEASED && MailBoxTable[nextMboxID%MAXMBOX].r_blockCount == 0 && MailBoxTable[nextMboxID%MAXMBOX].s_blockCount == 0){
+      break;
+    }
     nextMboxID++;
   }
   slot = nextMboxID%MAXMBOX;
@@ -664,16 +668,19 @@ int waitDevice(int type, int unit, int * status)
 void dumpMboxes()
 {
   for (int i = 0; i < MAXMBOX; i++){
+    if (i % 5 == 0){
+      printf("\n");
+    }
     printf("%i : ", i);
     if (MailBoxTable[i].status == EMPTY){
-      printf("EMPTY\n");
+      printf("EMPTY\t\t");
     }
     else if (MailBoxTable[i].status == TAKEN){
-      printf("TAKEN\n");
+      printf("TAKEN\t\t");
     } else if (MailBoxTable[i].status == RELEASED){
-      printf("RELEASED\n");
+      printf("RELEASED\t\t");
     } else {
-      printf("%i\n", MailBoxTable[i].status);
+      printf("%i\t\t", MailBoxTable[i].status);
     }
   }
 }

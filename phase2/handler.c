@@ -17,7 +17,7 @@ void nullsys(systemArgs *args)
 void clockHandler2(int dev, void *arg)
 {
   if (DEBUG2 && debugflag2)
-    //USLOSS_Console("clockHandler2(): called\n");
+    USLOSS_Console("clockHandler2(): called\n");
 
   timeSlice();
   if (clockTimer%5 == 0){
@@ -42,8 +42,8 @@ void diskHandler(int dev, void *arg)
 
 void termHandler(int dev, void *arg)
 {
-
-  //if (DEBUG2 && debugflag2)
+  if (DEBUG2 && debugflag2)
+    printf("termHandler\n");
   int a, status;
   a = USLOSS_DeviceInput(dev, (int)arg, &status);
   a = MboxCondSend((int)arg, &status, sizeof(int));
