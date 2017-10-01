@@ -19,7 +19,6 @@ do
 	fi
 done
 
-: <<'Blue'
 for VAR in {10..12}
 do
 	make test"$VAR" > temp.out
@@ -33,8 +32,8 @@ do
 		echo "${RED}--FAILED test$VAR--${NC}"
 	fi
 done
-Blue
-for VAR in {10..12}
+
+for VAR in {15..15}
 do
 	make test"$VAR" > temp.out
 	./test"$VAR" | grep -v '^ ' | grep -v '^PID' > myTests/myTest"$VAR".out

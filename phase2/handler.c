@@ -16,7 +16,6 @@ void nullsys(systemArgs *args)
 
 void clockHandler2(int dev, void *arg)
 {
-
   if (DEBUG2 && debugflag2)
     USLOSS_Console("clockHandler2(): called\n");
 
@@ -24,7 +23,7 @@ void clockHandler2(int dev, void *arg)
   if (clockTimer%5 == 0){
     int status, a;
     a = USLOSS_DeviceInput(USLOSS_CLOCK_INT, USLOSS_CLOCK_INT, &status);
-    a = MboxCondSend(CLOCK_MBOX, &status, 6);
+    a = MboxCondSend(CLOCK_MBOX, &status, sizeof(int));
     clockTimer = 5;
   }
   clockTimer--;

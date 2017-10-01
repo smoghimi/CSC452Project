@@ -232,7 +232,9 @@ int MboxSendZero(int mbox_id, void *msg_ptr, int msg_size)
     box->s_blockCount--;
   }
   else {                                        // If there is a receiver blocked on a 0slot
-    memcpy(box->receive_blocked->message, msg_ptr, msg_size);
+    if (msg_size != 0){
+      memcpy(box->slots->message, msg_ptr, msg_size);
+    }
     box->receive_blocked->modified = 1;
     UnblockReceiver(mbox_id);
     return 0;
@@ -258,7 +260,10 @@ int MboxCondSend(int mbox_id, void * message, int msg_size)
   boxPtr box = &MailBoxTable[index];
 
   if (box->numSlots == 0){
-    return -10;
+    if (box->r_blockCount > 0){
+      return MboxSendZero(mbox_id, message, msg_size);  
+    }
+    return -2;
   }
   
   if (box->filledSlots == box->numSlots){       // If there is no space, Return -2
@@ -361,6 +366,16 @@ int MboxRecvZero(int mbox_id, void * msg_ptr, int msg_size)
     AddToReceiveBlockList(mbox_id, getpid());
     blockMe(RECEIVE_BLOCKED);
     box->r_blockCount--;
+    if (box->status == RELEASED){
+      return -3;
+    }
+    if (msg_size != 0){
+      memcpy(msg_ptr, box->slots->message, sizeof(box->slots->message));  
+      return zapCheck(strlen(msg_ptr) + 1);
+    }
+    else {
+      return zapCheck(0);
+    }
   }
   return -10;
 } /* MboxRecvZero */
@@ -564,7 +579,7 @@ int waitDevice(int type, int unit, int * status)
     USLOSS_Halt(1);
   }
   if (type == USLOSS_CLOCK_INT){
-    MboxReceive(CLOCK_MBOX, &status, MAX_MESSAGE);
+    MboxReceive(CLOCK_MBOX, status, MAX_MESSAGE);
   }
   else if (type == USLOSS_TERM_INT){
     MboxReceive(unit, status, MAX_MESSAGE);
@@ -575,6 +590,7 @@ int waitDevice(int type, int unit, int * status)
   if (isZapped()){
     return -1;
   }
+  disableInterrupts();
   return 0;
 } /* waitDevice */
 
@@ -625,8 +641,10 @@ void DecrementProcs(int mbox_id)
    ----------------------------------------------------------------------- */
 void check_kernel_mode(char *name)
 {
+  // I want to be able to fold this function
   mode();
-}
+  // blank line
+} /* check_kernel_mode */
 
 /* Mode-------------------------------------------------------------------
    Name - Mode
