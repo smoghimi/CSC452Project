@@ -8,6 +8,7 @@ typedef struct mailbox      *boxPtr;
 typedef struct mboxProc     *mboxProcPtr;
 typedef struct blockList    *blockPtr;
 typedef struct blockList    blockList;
+typedef struct proc         proc;
 
 // io mailboxes
 #define     CLOCK_MBOX  0
@@ -28,8 +29,8 @@ typedef struct blockList    blockList;
 #define     RELEASED    3
 
 // Mailslot Statuses:
-#define     SLOT_READY 1
-#define     SLOT_TAKEN 2
+#define     SLOT_READY 0
+#define     SLOT_TAKEN 1
 
 struct mailbox {
     int       mboxID;
@@ -45,6 +46,11 @@ struct mailbox {
     // other items as needed...
 };
 
+struct proc {
+    int       mboxID;
+    int       pos;
+};
+
 struct mailSlot {
     int       mboxID;
     int       status;
@@ -55,7 +61,9 @@ struct mailSlot {
 
 struct blockList {
     int       blockedID;
+    int       modified;
     blockPtr  nextBlocked;
+    void      *message;
 };
 
 struct psrBits {

@@ -19,7 +19,22 @@ do
 	fi
 done
 
-for VAR in {10..14}
+: <<'Blue'
+for VAR in {10..12}
+do
+	make test"$VAR" > temp.out
+	./test"$VAR" | grep -v '^ ' | grep -v '^PID' > myTests/myTest"$VAR".out
+	cat testResults/test"$VAR".txt | grep -v '^ ' | grep -v '^PID' > myTests/test"$VAR".out
+	diff myTests/myTest"$VAR".out myTests/test"$VAR".out
+	ret=$?
+	if [ $ret -eq 0 ]; then
+		echo "${GREEN}PASSED test$VAR${NC}"
+	else
+		echo "${RED}--FAILED test$VAR--${NC}"
+	fi
+done
+Blue
+for VAR in {10..12}
 do
 	make test"$VAR" > temp.out
 	./test"$VAR" | grep -v '^ ' | grep -v '^PID' > myTests/myTest"$VAR".out

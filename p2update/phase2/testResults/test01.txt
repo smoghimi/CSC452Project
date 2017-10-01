@@ -1,0 +1,4 @@
+start2(): started
+start2(): MailBoxCreate returned id = 7
+start2(): MailBoxCreate returned id = 8
+All processes completed.

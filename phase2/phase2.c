@@ -8,38 +8,41 @@
 
 #include <phase1.h>
 #include <phase2.h>
-#include <usloss.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "message.h"
+#include "handler.c"
 
 /* ------------------------- Prototypes ----------------------------------- */
 extern int start2 (char *);
+int MboxSendZero(int, void*, int);
+int MboxRecvZero(int, void*, int);
 int waitDevice(int, int, int *);
 int UnblockReceiver(int);
 int UnblockSender(int);
 int MboxRelease(int);
 int start1 (char *);
+int zapCheck(int);
 int check_io();
+int mode();
 
 void AddToReceiveBlockList(int, int);
 void AddToSendBlockList(int, int);
 void check_kernel_mode(char *);
+void DecrementProcs(int);
 void disableInterrupts();
 void enableInterrupts();
-void clockHandler();
-void diskHandler();
-void termHandler();
+void dumpMboxes();
 
 /* -------------------------- Globals ------------------------------------- */
 int debugflag2 = 0;
 
 // the mail boxes 
 mailbox MailBoxTable[MAXMBOX];
-int clockTimer = 5;
+proc ProcTable[50];
 int mboxCount = 0;
 int nextMboxID = 0;
+int occupiedSlots = 0;
 
 // also need array of mail slots, array of function ptrs to system call 
 // handlers, ...
@@ -71,9 +74,10 @@ int start1(char *arg)
       MboxCreate(0, 50);
     }
 
-    USLOSS_IntVec[USLOSS_CLOCK_INT] = clockHandler;
-    USLOSS_IntVec[USLOSS_DISK_INT] = diskHandler;
-    USLOSS_IntVec[USLOSS_TERM_INT] = termHandler;
+    USLOSS_IntVec[USLOSS_CLOCK_INT] = (void (*) (int, void *))clockHandler2;
+    USLOSS_IntVec[USLOSS_TERM_INT] = (void (*) (int, void *))termHandler;
+    USLOSS_IntVec[USLOSS_DISK_INT] = (void (*) (int, void *))diskHandler;
+    
 
     enableInterrupts();
 
@@ -169,50 +173,72 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
     USLOSS_Halt(1);
     return -1;
   }
-  if (msg_size > MAX_MESSAGE){
-    USLOSS_Console("MboxSend(): msg_size > MAX_MESSAGE. Halting...\n");
-    USLOSS_Halt(1);
+  if (msg_size > MAX_MESSAGE || msg_size > MailBoxTable[mbox_id%MAXMBOX].slot_size){
     return -1;
   }
 
-  boxPtr mb = &MailBoxTable[mbox_id%MAXMBOX];
+  boxPtr box = &MailBoxTable[mbox_id%MAXMBOX];
 
-  // No blocked receivers && zero slot mbox
-
-  // blocked receiver && zero slot
-  if (mb->numSlots == 0 && mb->r_blockCount != 0){
-    if (msg_ptr != NULL){
-      memcpy(mb->slots->message, msg_ptr, msg_size);      
+  if (box->numSlots == 0){                      // If it is a zero slot mailbox we call MboxSendZero to deal with it.
+    return MboxSendZero(mbox_id, msg_ptr, msg_size);
+  }
+  else {                                        // If the mailbox has more than zero slots...
+    if (box->filledSlots < box->numSlots){      // If there are available slots in the mailbox...
+      slotPtr iterator = box->slots;
+      while(iterator->status != SLOT_READY){    // Add it to the first available slot we find
+        iterator = iterator->nextSlot;
+      }
+      iterator->status = SLOT_TAKEN;
+      memcpy(iterator->message, msg_ptr, msg_size);
+      box->filledSlots++;                       // Let them know that we have added a msg.
+      if (box->r_blockCount != 0){              // If there are rBlocked processes then we unblock 1...
+        UnblockReceiver(mbox_id);
+      }
+      return zapCheck(0);
     }
+    else {                                      // If there aren't available slots, we'll block
+      box->s_blockCount++;                      // Increment s_blocked to reflect us blocking
+      AddToSendBlockList(mbox_id, getpid());    // Add ourselves to the send blocked list.
+      blockMe(SEND_BLOCKED);
+      box->s_blockCount--;                      // decrement ourselves when we are unblocked
+      if (box->status == RELEASED){             // if the mbox was released
+        return -3;                              // return -3
+      }
+      slotPtr iterator = box->slots;            
+      while (iterator->status != SLOT_READY){
+        iterator = iterator->nextSlot;
+      }
+      iterator->status = SLOT_TAKEN;
+      memcpy(iterator->message, msg_ptr, msg_size); // Copy over our message into the mbox
+      box->filledSlots++;
+      
+      if (box->r_blockCount != 0){
+        UnblockReceiver(mbox_id);
+      }
+      return zapCheck(0);
+    }
+  }
+  return -10;
+} /* MboxSend */
+
+int MboxSendZero(int mbox_id, void *msg_ptr, int msg_size)
+{
+  boxPtr box = &MailBoxTable[mbox_id%MAXMBOX];
+
+  if (box->r_blockCount == 0){
+    box->s_blockCount++;
+    AddToSendBlockList(mbox_id, getpid());
+    blockMe(SEND_BLOCKED);
+    box->s_blockCount--;
+  }
+  else {                                        // If there is a receiver blocked on a 0slot
+    memcpy(box->receive_blocked->message, msg_ptr, msg_size);
+    box->receive_blocked->modified = 1;
     UnblockReceiver(mbox_id);
     return 0;
   }
-
-  if (mb->filledSlots == mb->numSlots){
-    int callerPID = getpid();
-    AddToSendBlockList(mbox_id, callerPID);
-    mb->s_blockCount++;
-    blockMe(SEND_BLOCKED);
-    mb->s_blockCount--;
-  }
-
-  if (mb->status == RELEASED || isZapped()){
-    return -3;
-  }
-
-  slotPtr temp = mb->slots;
-  while (temp != NULL && temp->status != SLOT_READY){
-    temp = temp->nextSlot;
-  }
-
-  temp->status = SLOT_TAKEN;
-  memcpy(temp->message, msg_ptr, msg_size);
-  mb->filledSlots++;
-  UnblockReceiver(mbox_id);
-  //unblockProc(callerPID);
-
-  return 0;
-} /* MboxSend */
+  return -10;
+} /* MboxSendZero */
 
 /* MboxCondSend-----------------------------------------------------------
    Name - MboxCondSend
@@ -230,19 +256,18 @@ int MboxCondSend(int mbox_id, void * message, int msg_size)
 
   int index = mbox_id % MAXMBOX;
   boxPtr box = &MailBoxTable[index];
-  if (box != NULL && box->status == TAKEN){
-    if (box->filledSlots == box->numSlots){
-      return -2;
-    } else {
-      MboxSend(mbox_id, message, msg_size);
-      return 0;
-    }
-  } else {
-    USLOSS_Halt(1);
-    return -1;
+
+  if (box->numSlots == 0){
+    return -10;
   }
-  return 0;
-}
+  
+  if (box->filledSlots == box->numSlots){       // If there is no space, Return -2
+    return -2;
+  }
+  else {                                        // If there is space, send it normally.
+    return MboxSend(mbox_id, message, msg_size);
+  }
+} /* MboxCondSend */
 
 /* MboxReceive------------------------------------------------------------
    Purpose - Get a msg from a slot of the indicated mailbox.
@@ -257,83 +282,88 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
   if (DEBUG2 && debugflag2){
     USLOSS_Console("MboxReceive(): Starting MboxReceive with mbox_id %i\n", mbox_id);
   }
+
+  // Check inputs --------------------------
   if (mbox_id < 0){
-    USLOSS_Console("MboxReceive(): Mailbox id is < 0. Halting...\n");
-    USLOSS_Halt(1);
     return -1;
   }
   int index = mbox_id % MAXMBOX;
-  if (MailBoxTable[index].status != 1){ // Currently if the status is empty. Might need to change this later.
-    USLOSS_Console("MboxReceive(): Mailbox is currently empty. Halting...\n");
-    USLOSS_Halt(1);
+  if (MailBoxTable[index].status != 1){ 
     return -1;
-  }
+  } // Check inputs ------------------------
 
   boxPtr box = &MailBoxTable[index];
+  int procIndex = getpid() % 50;
+  ProcTable[procIndex].mboxID = mbox_id;
+  ProcTable[procIndex].pos = box->r_blockCount;
+  slotPtr iterator, previous;
 
-  // Zero slot mbox && 0 s blocked
-  if (box->numSlots == 0 && box->s_blockCount == 0){
-    int callerPID = getpid();
-    box->r_blockCount++;
-    AddToReceiveBlockList(mbox_id, callerPID);
-    blockMe(RECEIVE_BLOCKED);
-    box->r_blockCount--;
-    if (box->slots->message != NULL && msg_size != 0){
-      memcpy(msg_ptr, box->slots->message, strlen(msg_ptr)+1);      
+  if (box->numSlots == 0){
+    return MboxRecvZero(mbox_id, msg_ptr, msg_size);
+  }
+  else {
+    if (box->filledSlots != 0){                 // If there is a message, we'll recv it
+      iterator = box->slots;
+      previous = NULL;
+      for (int i = 0; i < ProcTable[procIndex].pos; i++){
+        previous = iterator;
+        iterator = iterator->nextSlot;
+      }
+      memcpy(msg_ptr, iterator->message, msg_size);
+      box->filledSlots--;                       // Decrement filled slots as we have taken a message out.
+      // Need to unblock a sender
     }
-    return 0;
-  }
-
-  if (box->status == RELEASED || isZapped()){
-    return -3;
-  }
-
-  if (box->filledSlots == 0){
-    int callerPID;
-    callerPID = getpid();
-    AddToReceiveBlockList(mbox_id, callerPID);
-    box->r_blockCount++;
-    blockMe(RECEIVE_BLOCKED);
-    box->r_blockCount--;
-  }
-
-  if (box->status == RELEASED){
-    return -3;
-  }
-
-  slotPtr temp = box->slots;
-  for(int i = 0; i < box->numSlots; i++){
-    if (temp->message != NULL && temp->status == SLOT_TAKEN){
-      break;
+    else {                                      // If there are no messages, block.
+      box->r_blockCount++;
+      AddToReceiveBlockList(mbox_id, getpid());
+      blockMe(RECEIVE_BLOCKED);
+      box->r_blockCount--;
+      if(box->status == RELEASED){
+        return -3;
+      }
+      iterator = box->slots;
+      previous = NULL;
+      for (int i = 0; i < ProcTable[procIndex].pos; i++){
+        previous = iterator;
+        iterator = iterator->nextSlot;
+      }
+      memcpy(msg_ptr, iterator->message, msg_size);
+      box->filledSlots--;
     }
-    temp = temp->nextSlot;
-  }
 
-  if (strlen(temp->message) > msg_size){
-    USLOSS_Console("MboxReceive(): Msg_size is too small. Halting...\n");
-    USLOSS_Halt(1);
-    return -1;
+    if (previous != NULL){
+      previous->nextSlot = iterator->nextSlot;  // These next steps will help maintain a FIFO Queue.
+    }
+    else {
+      box->slots = box->slots->nextSlot;
+    }
+    iterator = box->slots;
+    while (iterator->nextSlot != NULL){
+      iterator = iterator->nextSlot;
+    }
+    iterator->nextSlot = malloc(sizeof(mailSlot));
+    iterator = iterator->nextSlot;
+    iterator->mboxID = mbox_id;
+    iterator->status = SLOT_READY;
+    iterator->message = malloc(MAX_MESSAGE);  // This is the end of FIFO maintenance.
+    DecrementProcs(mbox_id);
+    UnblockSender(mbox_id);
+    return zapCheck(strlen(msg_ptr) + 1);
   }
-
-  memcpy(msg_ptr, temp->message, strlen(temp->message) + 1);
-  box->filledSlots--;
-  int returnValue = strlen(temp->message) + 1;
-  temp->status = SLOT_READY;
-
-  // This code removes the first link of the the slot list and adds a new one to the end
-  box->slots = box->slots->nextSlot;
-  temp = box->slots;
-  while (temp->nextSlot != NULL){
-    temp = temp->nextSlot;
-  }
-  temp->nextSlot = malloc(sizeof(*temp));
-  temp = temp->nextSlot;
-  temp->mboxID = box->mboxID;
-  temp->status = SLOT_READY;
-  temp->message = malloc(MAX_MESSAGE);
-  UnblockSender(mbox_id);
-  return returnValue;
+  return -10;
 } /* MboxReceive */
+
+int MboxRecvZero(int mbox_id, void * msg_ptr, int msg_size)
+{
+  boxPtr box = &MailBoxTable[mbox_id%MAXMBOX];
+  if (box->s_blockCount == 0){
+    box->r_blockCount++;
+    AddToReceiveBlockList(mbox_id, getpid());
+    blockMe(RECEIVE_BLOCKED);
+    box->r_blockCount--;
+  }
+  return -10;
+} /* MboxRecvZero */
 
 /* MboxCondReceive--------------------------------------------------------
    Purpose - Get a msg from a slot of the indicated mailbox.
@@ -360,7 +390,6 @@ int MboxCondReceive(int mbox_id, void * msg_ptr, int msg_size)
     }
   } 
   else {
-    USLOSS_Halt(1);
     return -1;
   }
   return 0;
@@ -387,14 +416,21 @@ int MboxRelease(int mbox_id)
     return -1;
   }
 
+  mboxCount--;
   MailBoxTable[index].status = RELEASED;
-  while (UnblockSender(mbox_id)) {}
-  while (UnblockReceiver(mbox_id)) {}
+  int sb = MailBoxTable[index].s_blockCount;
+  int rb = MailBoxTable[index].r_blockCount;
+  for (int i = 0; i < sb; i++){
+    UnblockSender(mbox_id);
+  }
+  for (int i = 0; i < rb; i++){
+    UnblockReceiver(mbox_id);
+  }
 
   return 0;
 } /* MboxRelease */
 
-/* AddSendToBlockList-----------------------------------------------------
+/* AddToSendBlockList-----------------------------------------------------
    Name - AddToBlockList
    Purpose - Adds a process to a mailboxes block list if it is waiting for
               a receive.
@@ -412,6 +448,7 @@ void AddToSendBlockList(int mbox_id, int pid)
     blockPtr temp = box->send_blocked;
     if (temp == NULL){
       temp = malloc(sizeof(blockList));
+      temp->message = malloc(MAX_MESSAGE);
       temp->blockedID = pid;
       box->send_blocked = temp;
     } else {
@@ -422,7 +459,7 @@ void AddToSendBlockList(int mbox_id, int pid)
       temp->nextBlocked->blockedID = pid;
     }
   } 
-} /* AddSendToBlockList */
+} /* AddToSendBlockList */
 
 /* UnblockSender----------------------------------------------------------
    Name - UnblockSender
@@ -467,6 +504,7 @@ void AddToReceiveBlockList(int mbox_id, int pid)
     blockPtr temp = box->receive_blocked;
     if (temp == NULL){
       temp = malloc(sizeof(blockList));
+      temp->message = malloc(MAX_MESSAGE);
       temp->blockedID = pid;
       box->receive_blocked = temp;
     } else {
@@ -516,6 +554,15 @@ int UnblockReceiver(int mbox_id)
    ----------------------------------------------------------------------- */
 int waitDevice(int type, int unit, int * status)
 {
+  if (DEBUG2 && debugflag2){
+    USLOSS_Console("waitDevice():\n");
+  }
+  if (mode()){
+    enableInterrupts();
+  } 
+  else {
+    USLOSS_Halt(1);
+  }
   if (type == USLOSS_CLOCK_INT){
     MboxReceive(CLOCK_MBOX, &status, MAX_MESSAGE);
   }
@@ -531,57 +578,103 @@ int waitDevice(int type, int unit, int * status)
   return 0;
 } /* waitDevice */
 
-/* clockHandler-----------------------------------------------------------
-   Name - clockHandler
-   Purpose - Handles clock interrupts.
-   ----------------------------------------------------------------------- */
-void clockHandler()
+void dumpMboxes()
 {
-  timeSlice();
-  if (clockTimer%5 == 0){
-    int status, a;
-    a = USLOSS_DeviceInput(USLOSS_CLOCK_INT, USLOSS_CLOCK_INT, &status);
-    MboxSend(CLOCK_MBOX, &status, 6);
-    clockTimer = 5;
+  for (int i = 0; i < MAXMBOX; i++){
+    printf("%i : ", i);
+    if (MailBoxTable[i].status == EMPTY){
+      printf("EMPTY\n");
+    }
+    else if (MailBoxTable[i].status == TAKEN){
+      printf("TAKEN\n");
+    } else if (MailBoxTable[i].status == RELEASED){
+      printf("RELEASED\n");
+    } else {
+      printf("%i\n", MailBoxTable[i].status);
+    }
   }
-  clockTimer--;
-} /* clockHandler */
+}
 
-/* diskHandler------------------------------------------------------------
-   Name - diskHandler
-   Purpose - Handles clock interrupts.
-   ----------------------------------------------------------------------- */
-void diskHandler()
+int zapCheck(int check)
 {
-} /* diskHandler */
+  if (isZapped()){
+    return -3;
+  }
+  return check;
+}
 
-/* termHandler------------------------------------------------------------
-   Name - termHandler
-   Purpose - Handles clock interrupts.
+/* DecrementProcs---------------------------------------------------------
+   Name - waitDevice
+   Purpose - Unblocks a blocked process (if there is one) that is waiting
+              to receive a message from mailbox mbox_id.
+   Parameters - type, unit, status.
    ----------------------------------------------------------------------- */
-void termHandler()
+void DecrementProcs(int mbox_id)
 {
-} /* termHandler */
+  for (int i = 0; i < 50; i++){
+    if (ProcTable[i].mboxID == mbox_id){
+      ProcTable[i].pos--;
+    }
+  }
+} /* DecrementProcs */
 
+/* check_kernel_mode------------------------------------------------------
+   Name - check_kernel_mode
+   Purpose - called by phase 1 library
+   Parameters - name
+   ----------------------------------------------------------------------- */
 void check_kernel_mode(char *name)
+{
+  mode();
+}
+
+/* Mode-------------------------------------------------------------------
+   Name - Mode
+   Purpose - checks if we are in kernel mode.
+   ----------------------------------------------------------------------- */
+int mode()
 {
   unsigned int mode;
   mode = USLOSS_PsrGet();
   if ((mode & USLOSS_PSR_CURRENT_MODE) == 0){
-    USLOSS_Console("%s is not running in kernel mode. Halting...\n", name);
+    USLOSS_Console("Not running in kernel mode. Halting...\n");
     USLOSS_Halt(1);
+    return 0;
   }
-}
+  return 1;
+} /* Mode */
 
+/* disableInterrupts------------------------------------------------------
+   Name - disableInterruptes
+   Purpose - disables interrupts
+   ----------------------------------------------------------------------- */
 void disableInterrupts()
 {
+  if (mode()){
+    unsigned int mode = USLOSS_PsrGet();
+    mode &= ~(USLOSS_PSR_CURRENT_INT);
+    int a = USLOSS_PsrSet(mode);
+    if (a == 45){
+      printf("\n");
+    }
+  }
+} /* disableInterrupts */
 
-}
-
+/* enableInterrupts-------------------------------------------------------
+   Name - enableInterrupts
+   Purpose - enables interrupts
+   ----------------------------------------------------------------------- */
 void enableInterrupts()
 {
-
-}
+  if (mode()){
+    unsigned int mode = USLOSS_PsrGet();
+    mode |= USLOSS_PSR_CURRENT_INT;
+    int a = USLOSS_PsrSet(mode);
+    if (a == 45){
+      printf("\n");
+    }
+  }
+} /* enableInterrupts */
 
 /* check_io---------------------------------------------------------------
    Name - check_io

@@ -1,0 +1,24 @@
+start2(): started
+
+start2(): MboxCreate returned id = 7
+XXp2a(): sending message 'hello from XXp2a' to mailbox 7, msg_size = 17
+XXp2b(): sending message 'hello from XXp2b' to mailbox 7, msg_size = 17
+XXp2c(): sending message 'hello from XXp2c' to mailbox 7, msg_size = 17
+XXp4(): started and quitting
+XXp3(): started
+XXp3(): MboxRelease returned 0
+
+start2(): joined with kid 8, status = -4
+XXp2a(): after send of message 'hello from XXp2a', result = -3
+XXp2a(): zap'd by MboxSend() call
+
+start2(): joined with kid 4, status = -3
+XXp2b(): after send of message 'hello from XXp2b', result = -3
+XXp2b(): zap'd by MboxSend() call
+
+start2(): joined with kid 5, status = -3
+XXp2c(): after send of message 'hello from XXp2c', result = -3
+XXp2c(): zap'd by MboxSend() call
+
+start2(): joined with kid 6, status = -3
+All processes completed.

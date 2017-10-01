@@ -1,0 +1,25 @@
+start2(): started
+
+start2(): MboxCreate returned id = 7
+XXp2a(): receiving message from mailbox 7, msg_size = 20
+XXp2b(): receiving message from mailbox 7, msg_size = 20
+XXp2c(): receiving message from mailbox 7, msg_size = 20
+
+XXp3(): started, releasing mailbox 7
+XXp2a(): after receive of message, result = -3
+XXp2a(): zap'd by MboxReceive() call
+
+start2(): joined with kid 4, status = -3
+XXp2b(): after receive of message, result = -3
+XXp2b(): zap'd by MboxReceive() call
+
+start2(): joined with kid 5, status = -3
+XXp2c(): after receive of message, result = -3
+XXp2c(): zap'd by MboxReceive() call
+
+start2(): joined with kid 6, status = -3
+XXp3(): MboxRelease returned 0
+
+start2(): joined with kid 7, status = -4
+failed to recv from released mailbox ... success
+All processes completed.
