@@ -186,6 +186,9 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
     return -1;
   }
 
+  int procIndex = getpid()%50;
+  ProcTable[procIndex].spos = box->s_blockCount;
+
   if (box->numSlots == 0){                      // If it is a zero slot mailbox we call MboxSendZero to deal with it.
     return MboxSendZero(mbox_id, msg_ptr, msg_size);
   }
@@ -212,10 +215,20 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
       if (box->status == RELEASED){             // if the mbox was released
         return -3;                              // return -3
       }
-      slotPtr iterator = box->slots;            
-      while (iterator->status != SLOT_READY){
-        iterator = iterator->nextSlot;
+      slotPtr iterator = box->slots;  
+      if (ProcTable[procIndex].spos == 0){      // If there was no one blocked when you came
+        while (iterator->status != SLOT_READY){
+              iterator = iterator->nextSlot;
+        }
       }
+      else {                                    // If there were others blocked when you came
+        for (int i = 0; i < ProcTable[procIndex].spos; i++){
+          iterator = iterator->nextSlot;
+        }
+      }      
+      if (iterator->status == SLOT_TAKEN){
+        return MboxSend(mbox_id, msg_ptr, msg_size); 
+      }   
       iterator->status = SLOT_TAKEN;
       memcpy(iterator->message, msg_ptr, msg_size); // Copy over our message into the mbox
       occupiedSlots++;
@@ -223,6 +236,12 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
       
       if (box->r_blockCount != 0){
         UnblockReceiver(mbox_id);
+      }
+      if (ProcTable[procIndex].spos != 0 && box->slots->status != SLOT_TAKEN){
+        box->s_blockCount++;                      // Increment s_blocked to reflect us blocking
+        AddToSendBlockList(mbox_id, getpid());    // Add ourselves to the send blocked list.
+        blockMe(SEND_BLOCKED);
+        box->s_blockCount--; 
       }
       return zapCheck(0);
     }
@@ -362,6 +381,12 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
       for (int i = 0; i < ProcTable[procIndex].pos; i++){
         previous = iterator;
         iterator = iterator->nextSlot;
+      }
+      while (iterator->status == SLOT_READY){
+        box->r_blockCount++;
+        AddToReceiveBlockList(mbox_id, getpid());
+        blockMe(RECEIVE_BLOCKED);
+        box->r_blockCount--;
       }
       memcpy(msg_ptr, iterator->message, msg_size);
       occupiedSlots--;

@@ -49,6 +49,7 @@ struct mailbox {
 struct proc {
     int       mboxID;
     int       pos;
+    int       spos;
 };
 
 struct mailSlot {
