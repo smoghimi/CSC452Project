@@ -45,7 +45,7 @@ $(TESTS):       $(TARGET) p1.o
 
 clean:
 	rm -f $(COBJS) $(TARGET) core term*.out test*.o test??.txt $(TESTS) \
-		p1.o term*in
+		p1.o
 
 phase2.o:	message.h
 

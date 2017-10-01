@@ -176,8 +176,15 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
   if (msg_size > MAX_MESSAGE || msg_size > MailBoxTable[mbox_id%MAXMBOX].slot_size){
     return -1;
   }
+  if (occupiedSlots >= MAXSLOTS){
+    return -1;
+  }
 
   boxPtr box = &MailBoxTable[mbox_id%MAXMBOX];
+
+  if (box->status == RELEASED){
+    return -1;
+  }
 
   if (box->numSlots == 0){                      // If it is a zero slot mailbox we call MboxSendZero to deal with it.
     return MboxSendZero(mbox_id, msg_ptr, msg_size);
@@ -190,6 +197,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
       }
       iterator->status = SLOT_TAKEN;
       memcpy(iterator->message, msg_ptr, msg_size);
+      occupiedSlots++;
       box->filledSlots++;                       // Let them know that we have added a msg.
       if (box->r_blockCount != 0){              // If there are rBlocked processes then we unblock 1...
         UnblockReceiver(mbox_id);
@@ -210,6 +218,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
       }
       iterator->status = SLOT_TAKEN;
       memcpy(iterator->message, msg_ptr, msg_size); // Copy over our message into the mbox
+      occupiedSlots++;
       box->filledSlots++;
       
       if (box->r_blockCount != 0){
@@ -221,15 +230,28 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
   return -10;
 } /* MboxSend */
 
+/* MboxSendZero-----------------------------------------------------------
+   Name - MboxSendZero
+   Purpose - Put a message into a slot for the indicated mailbox.
+             Block the sending process if no slot available.
+   Parameters - mailbox id, pointer to data of msg, # of bytes in msg.
+   Returns - zero if successful, -1 if invalid args.
+   Side Effects - none.
+   ----------------------------------------------------------------------- */
 int MboxSendZero(int mbox_id, void *msg_ptr, int msg_size)
 {
   boxPtr box = &MailBoxTable[mbox_id%MAXMBOX];
 
   if (box->r_blockCount == 0){
+    memcpy(box->slots->message, msg_ptr, msg_size);
     box->s_blockCount++;
     AddToSendBlockList(mbox_id, getpid());
     blockMe(SEND_BLOCKED);
     box->s_blockCount--;
+    if (box->status == RELEASED){
+      return -3;
+    }
+    return zapCheck(0);
   }
   else {                                        // If there is a receiver blocked on a 0slot
     if (msg_size != 0){
@@ -256,8 +278,16 @@ int MboxCondSend(int mbox_id, void * message, int msg_size)
     USLOSS_Console("MboxCondSend(): Attempting to conditionally send to mbox: %i\n", mbox_id);
   }
 
+  if (occupiedSlots >= MAXSLOTS){
+    return -2;
+  }
+
   int index = mbox_id % MAXMBOX;
   boxPtr box = &MailBoxTable[index];
+
+  if (box->status == RELEASED){
+    return -1;
+  }
 
   if (box->numSlots == 0){
     if (box->r_blockCount > 0){
@@ -315,6 +345,7 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
         iterator = iterator->nextSlot;
       }
       memcpy(msg_ptr, iterator->message, msg_size);
+      occupiedSlots--;
       box->filledSlots--;                       // Decrement filled slots as we have taken a message out.
       // Need to unblock a sender
     }
@@ -333,6 +364,7 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
         iterator = iterator->nextSlot;
       }
       memcpy(msg_ptr, iterator->message, msg_size);
+      occupiedSlots--;
       box->filledSlots--;
     }
 
@@ -352,7 +384,10 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
     iterator->status = SLOT_READY;
     iterator->message = malloc(MAX_MESSAGE);  // This is the end of FIFO maintenance.
     DecrementProcs(mbox_id);
-    UnblockSender(mbox_id);
+    if (box->s_blockCount > 0){
+      UnblockSender(mbox_id);
+      
+    }
     return zapCheck(strlen(msg_ptr) + 1);
   }
   return -10;
@@ -370,11 +405,18 @@ int MboxRecvZero(int mbox_id, void * msg_ptr, int msg_size)
       return -3;
     }
     if (msg_size != 0){
-      memcpy(msg_ptr, box->slots->message, sizeof(box->slots->message));  
+      memcpy(msg_ptr, box->slots->message, strlen(box->slots->message));  
       return zapCheck(strlen(msg_ptr) + 1);
     }
     else {
       return zapCheck(0);
+    }
+  }
+  else {
+    if (msg_size != 0){
+      memcpy(msg_ptr, box->slots->message, strlen(box->slots->message));
+      UnblockSender(mbox_id);
+      return zapCheck(strlen(msg_ptr) + 1);
     }
   }
   return -10;
