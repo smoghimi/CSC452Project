@@ -33,6 +33,25 @@ extern int MboxCondReceive(int mbox_id, void *msg_ptr, int msg_max_size);
 // type = interrupt device type, unit = # of device (when more than one),
 // status = where interrupt handler puts device's status register.
 extern int waitDevice(int type, int unit, int *status);
+extern int MboxSendZero(int, void*, int);
+extern int MboxRecvZero(int, void*, int);
+extern int waitDevice(int, int, int *);
+extern int UnblockReceiver(int);
+extern int UnblockSender(int);
+extern int MboxRelease(int);
+extern int start1 (char *);
+extern int zapCheck(int);
+extern int check_io();
+extern int mode();
+
+extern void AddToReceiveBlockList(int, int);
+extern void AddToSendBlockList(int, int);
+extern void check_kernel_mode(char *);
+extern void DecrementProcs(int);
+extern void disableInterrupts();
+extern void enableInterrupts();
+extern void dumpMboxes();
+
 
 //  The systemArgs structure
 typedef struct systemArgs
