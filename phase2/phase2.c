@@ -40,6 +40,8 @@ int occupiedSlots = 0;
    ----------------------------------------------------------------------- */
 int start1(char *arg)
 {
+    mode();
+
     if (DEBUG2 && debugflag2)
         USLOSS_Console("start1(): at beginning\n");
 
@@ -88,6 +90,8 @@ int start1(char *arg)
    ----------------------------------------------------------------------- */
 int MboxCreate(int slots, int slot_size)
 {
+  mode();
+
   disableInterrupts();
   int slot = -1;
 
@@ -150,6 +154,8 @@ int MboxCreate(int slots, int slot_size)
    ----------------------------------------------------------------------- */
 int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
 {
+  mode();
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("MboxSend(): Sending a message to %i\n", mbox_id);
   }
@@ -254,6 +260,8 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
    ----------------------------------------------------------------------- */
 int MboxSendZero(int mbox_id, void *msg_ptr, int msg_size)
 {
+  mode();
+
   boxPtr box = &MailBoxTable[mbox_id%MAXMBOX];
 
   if (box->r_blockCount == 0){				//If we have a zero slot mailbox, with no blockCount
@@ -288,6 +296,8 @@ int MboxSendZero(int mbox_id, void *msg_ptr, int msg_size)
    ----------------------------------------------------------------------- */
 int MboxCondSend(int mbox_id, void * message, int msg_size)
 {
+  mode();
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("MboxCondSend(): Attempting to conditionally send to mbox: %i\n", mbox_id);
   }
@@ -329,6 +339,8 @@ int MboxCondSend(int mbox_id, void * message, int msg_size)
    ----------------------------------------------------------------------- */
 int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
 {
+  mode();
+
   int noCopyFlag=0;
   if (DEBUG2 && debugflag2){
     USLOSS_Console("MboxReceive(): Starting MboxReceive with mbox_id %i\n", mbox_id);
@@ -435,6 +447,7 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
 //This function is designer to recieve a message from a zero slot mailbox
 int MboxRecvZero(int mbox_id, void * msg_ptr, int msg_size)
 {
+  mode();
   //Starts by getting the address of the box that is being recvd from
   boxPtr box = &MailBoxTable[mbox_id%MAXMBOX];
   if (box->s_blockCount == 0){			//Checks the s_blockCount: if == 0 inc the r_blockCouint and block, then check status
@@ -473,6 +486,8 @@ int MboxRecvZero(int mbox_id, void * msg_ptr, int msg_size)
    ----------------------------------------------------------------------- */
 int MboxCondReceive(int mbox_id, void * msg_ptr, int msg_size)
 {
+  mode();
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("MboxCondReceive(): conditionally receiving from mbox %i\n", mbox_id);
   }
@@ -504,6 +519,8 @@ int MboxCondReceive(int mbox_id, void * msg_ptr, int msg_size)
    ----------------------------------------------------------------------- */
 int MboxRelease(int mbox_id)
 {
+  mode();
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("MboxRelease(): Releasing mbox %i\n", mbox_id);
   }
@@ -540,6 +557,8 @@ int MboxRelease(int mbox_id)
    ----------------------------------------------------------------------- */
 void AddToSendBlockList(int mbox_id, int pid)
 {
+  mode();
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("AddToSendBlockList(): Adding pid:%i to mailbox:%i block list.\n", pid, mbox_id);
   }
@@ -572,6 +591,8 @@ void AddToSendBlockList(int mbox_id, int pid)
    ----------------------------------------------------------------------- */
 int UnblockSender(int mbox_id)
 {
+  mdoe();
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("UnblockReceiver(): Unblocking first process at mailbox:%i\n", mbox_id);
   }
@@ -597,6 +618,8 @@ int UnblockSender(int mbox_id)
    ----------------------------------------------------------------------- */
 void AddToReceiveBlockList(int mbox_id, int pid)
 {
+  mode();
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("AddToBlockList(): Adding pid:%i to mailbox:%i block list.\n", pid, mbox_id);
   }
@@ -628,6 +651,8 @@ void AddToReceiveBlockList(int mbox_id, int pid)
    ----------------------------------------------------------------------- */
 int UnblockReceiver(int mbox_id)
 {
+  mode();
+
   if (DEBUG2 && debugflag2){
     USLOSS_Console("UnblockReceiver(): Unblocking first process at mailbox:%i\n", mbox_id);
   }
@@ -657,6 +682,7 @@ int UnblockReceiver(int mbox_id)
    ----------------------------------------------------------------------- */
 int waitDevice(int type, int unit, int * status)
 {
+  mode();
   if (DEBUG2 && debugflag2){
     USLOSS_Console("waitDevice():\n");
   }
@@ -684,6 +710,7 @@ int waitDevice(int type, int unit, int * status)
 
 void dumpMboxes()
 {
+  mode();
   for (int i = 0; i < MAXMBOX; i++){			//Iterates over all mailboxes and prints their status
     if (i % 5 == 0){
       printf("\n");
@@ -792,6 +819,7 @@ void enableInterrupts()
    ----------------------------------------------------------------------- */
 int check_io()
 {
+  mode();
   for (int i = 0; i < 7; i++){			//Check_io simply looks at our interrupt handler mailboxes, and if there are blocks returns 1
     if (MailBoxTable[i].r_blockCount > 0){
       return 1;
