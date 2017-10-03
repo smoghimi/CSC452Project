@@ -591,7 +591,7 @@ void AddToSendBlockList(int mbox_id, int pid)
    ----------------------------------------------------------------------- */
 int UnblockSender(int mbox_id)
 {
-  mdoe();
+  mode();
 
   if (DEBUG2 && debugflag2){
     USLOSS_Console("UnblockReceiver(): Unblocking first process at mailbox:%i\n", mbox_id);
