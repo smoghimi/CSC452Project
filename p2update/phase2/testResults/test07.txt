@@ -24,27 +24,27 @@ XXp3(): after receipt of message #0, result = 16
 XXp3(): receiving message #1 from mailbox 7
 XXp2b(): after send of message 'hello from XXp2b', result = 0
 start2(): joined with kid 6, status = -3
-XXp3(): after receipt of message #1, result = 17
-        message = `hello from XXp2a'
+XXp3(): after receipt of message #1, result = 16
+        message = `hello there, #1'
 XXp3(): receiving message #2 from mailbox 7
 XXp2c(): after send of message 'hello from XXp2c', result = 0
 start2(): joined with kid 7, status = -3
-XXp3(): after receipt of message #2, result = 17
-        message = `hello from XXp2b'
+XXp3(): after receipt of message #2, result = 16
+        message = `hello there, #2'
 XXp3(): receiving message #3 from mailbox 7
-XXp3(): after receipt of message #3, result = 17
-        message = `hello from XXp2c'
+XXp3(): after receipt of message #3, result = 16
+        message = `hello there, #3'
 XXp3(): receiving message #4 from mailbox 7
 XXp3(): after receipt of message #4, result = 16
-        message = `hello there, #1'
-XXp3(): receiving message #5 from mailbox 7
-XXp3(): after receipt of message #5, result = 16
-        message = `hello there, #2'
-XXp3(): receiving message #6 from mailbox 7
-XXp3(): after receipt of message #6, result = 16
-        message = `hello there, #3'
-XXp3(): receiving message #7 from mailbox 7
-XXp3(): after receipt of message #7, result = 16
         message = `hello there, #4'
+XXp3(): receiving message #5 from mailbox 7
+XXp3(): after receipt of message #5, result = 17
+        message = `hello from XXp2a'
+XXp3(): receiving message #6 from mailbox 7
+XXp3(): after receipt of message #6, result = 17
+        message = `hello from XXp2b'
+XXp3(): receiving message #7 from mailbox 7
+XXp3(): after receipt of message #7, result = 17
+        message = `hello from XXp2c'
 start2(): joined with kid 8, status = -4
 All processes completed.

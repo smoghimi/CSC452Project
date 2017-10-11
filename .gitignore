@@ -1,5 +1,14 @@
+<<<<<<< HEAD
 
 phase1/libphase1.a
 phase1/libphase1.a
 phase1/libphase1.a
 phase1/phase1.o
+=======
+
+p2update/handler.c
+p2update/handler.c
+p2update/Makefile
+p2update/handler.c
+p2update/*
+>>>>>>> 452-Project-Shaion

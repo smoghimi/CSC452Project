@@ -1,0 +1,11 @@
+start3(): started.  Creating semaphore.
+start3(): calling Spawn for Child1
+Child1(): starting, P'ing semaphore
+start3(): after spawn of 5
+start3(): calling Spawn for Child2
+Child2(): starting, V'ing semaphore
+Child2(): done
+Child1(): done
+start3(): after spawn of 6
+start3(): Parent done. Calling Terminate.
+All processes completed.

@@ -1,0 +1,3 @@
+start2(): putting itself into user mode
+start2(): calling USLOSS_Syscall executing syscall 0, this should halt
+syscallHandler(): sys number 50 is wrong.  Halting...

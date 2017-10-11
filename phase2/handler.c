@@ -21,6 +21,7 @@ void clockHandler2(int dev, void *arg)
   if (DEBUG2 && debugflag2)
     USLOSS_Console("clockHandler2(): called\n");
 
+<<<<<<< HEAD
   timeSlice();									//Uses the time slice from phase1
   if (clockTimer%5 == 0){							//Every five iterations of the clock we send a msg
     int status, a;
@@ -30,6 +31,14 @@ void clockHandler2(int dev, void *arg)
       USLOSS_Console("Something went wrong\n");
     }
     clockTimer = 5;								//Clock timer goes from 0 to 5 forever, so there's no overflow
+=======
+  timeSlice();
+  if (clockTimer%5 == 0){
+    int status, a;
+    a = USLOSS_DeviceInput(USLOSS_CLOCK_INT, USLOSS_CLOCK_INT, &status);
+    a = MboxCondSend(CLOCK_MBOX, &status, sizeof(int));
+    clockTimer = 5;
+>>>>>>> 452-Project-Shaion
   }
   clockTimer--;
 } /* clockHandler */
@@ -49,17 +58,26 @@ void diskHandler(int dev, void *arg)
 } /* diskHandler */
 
 
+<<<<<<< HEAD
 void termHandler(int dev, int arg)
+=======
+void termHandler(int dev, void *arg)
+>>>>>>> 452-Project-Shaion
 {
   if (DEBUG2 && debugflag2)
     printf("termHandler\n");
   int a, status;
+<<<<<<< HEAD
   int blue = arg;
   a = USLOSS_DeviceInput(dev, blue, &status);		//Same as the disk handler, but we iterate only past the clock mailbox for out arg
   a = MboxCondSend(blue + 1, &status, sizeof(int));
   if (a == -10){
     USLOSS_Console("Something went wrong\n");
   }
+=======
+  a = USLOSS_DeviceInput(dev, (int)arg, &status);
+  a = MboxCondSend((int)arg, &status, sizeof(int));
+>>>>>>> 452-Project-Shaion
 } /* termHandler */
 
 

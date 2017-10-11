@@ -45,6 +45,8 @@ int start2(char *arg)
     }
 
 
+    //dumpMboxes();
+
     // Create 8 mailboxes, which be two mailboxes too many
     for (i = 0; i < 8; i++) {
         mbox_id = MboxCreate(10, 50);

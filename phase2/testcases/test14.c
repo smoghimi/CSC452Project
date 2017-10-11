@@ -60,6 +60,7 @@ int XXp1(char *arg)
     USLOSS_Console("XXp1(): started, calling waitDevice for terminal 1\n");
 
     result = waitDevice(USLOSS_TERM_DEV, 1, &status);
+
     USLOSS_Console("XXp1(): after waitDevice call\n");
 
     if ( result == -1 ) {

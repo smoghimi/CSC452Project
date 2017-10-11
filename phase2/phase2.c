@@ -15,6 +15,28 @@
 
 /* ------------------------- Prototypes ----------------------------------- */
 extern int start2 (char *);
+<<<<<<< HEAD
+=======
+int MboxSendZero(int, void*, int);
+int MboxRecvZero(int, void*, int);
+int waitDevice(int, int, int *);
+int UnblockReceiver(int);
+int UnblockSender(int);
+int MboxRelease(int);
+int start1 (char *);
+int zapCheck(int);
+int check_io();
+int mode();
+
+void AddToReceiveBlockList(int, int);
+void AddToSendBlockList(int, int);
+void check_kernel_mode(char *);
+void DecrementProcs(int);
+void disableInterrupts();
+void enableInterrupts();
+void dumpMboxes();
+
+>>>>>>> 452-Project-Shaion
 /* -------------------------- Globals ------------------------------------- */
 int debugflag2 = 0;
 
@@ -57,10 +79,16 @@ int start1(char *arg)
       MboxCreate(0, 50);
     }
 
+<<<<<<< HEAD
     USLOSS_IntVec[USLOSS_CLOCK_INT]   = clockHandler2;
     USLOSS_IntVec[USLOSS_TERM_INT]    = (void (*) (int, void *)) termHandler;
     USLOSS_IntVec[USLOSS_DISK_INT]    = diskHandler;
     USLOSS_IntVec[USLOSS_SYSCALL_INT] = syscallHandler;
+=======
+    USLOSS_IntVec[USLOSS_CLOCK_INT] = (void (*) (int, void *))clockHandler2;
+    USLOSS_IntVec[USLOSS_TERM_INT] = (void (*) (int, void *))termHandler;
+    USLOSS_IntVec[USLOSS_DISK_INT] = (void (*) (int, void *))diskHandler;
+>>>>>>> 452-Project-Shaion
     
 
     enableInterrupts();
@@ -90,8 +118,11 @@ int start1(char *arg)
    ----------------------------------------------------------------------- */
 int MboxCreate(int slots, int slot_size)
 {
+<<<<<<< HEAD
   mode();
 
+=======
+>>>>>>> 452-Project-Shaion
   disableInterrupts();
   int slot = -1;
 
@@ -173,15 +204,23 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
     return -1;
   }
 
+<<<<<<< HEAD
   //Reads the address of the mailbox in the mailbox table based on hashing its id by the size of the table
   boxPtr box = &MailBoxTable[mbox_id%MAXMBOX];
 
   //If released then return
+=======
+  boxPtr box = &MailBoxTable[mbox_id%MAXMBOX];
+
+>>>>>>> 452-Project-Shaion
   if (box->status == RELEASED){
     return -1;
   }
 
+<<<<<<< HEAD
   //Gets index hashed by the size of the table and the pid, then uses spos to fill blockCount
+=======
+>>>>>>> 452-Project-Shaion
   int procIndex = getpid()%50;
   ProcTable[procIndex].spos = box->s_blockCount;
 
@@ -196,15 +235,21 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
       }
       iterator->status = SLOT_TAKEN;
       memcpy(iterator->message, msg_ptr, msg_size);
+<<<<<<< HEAD
       iterator->size = msg_size;
+=======
+>>>>>>> 452-Project-Shaion
       occupiedSlots++;
       box->filledSlots++;                       // Let them know that we have added a msg.
       if (box->r_blockCount != 0){              // If there are rBlocked processes then we unblock 1...
         UnblockReceiver(mbox_id);
       }
+<<<<<<< HEAD
       if (iterator->recvd){			// If the iterator has been recieved check if zapped
         return zapCheck(-1);
       }
+=======
+>>>>>>> 452-Project-Shaion
       return zapCheck(0);
     }
     else {                                      // If there aren't available slots, we'll block
@@ -226,11 +271,18 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
           iterator = iterator->nextSlot;
         }
       }      
+<<<<<<< HEAD
       if (iterator->status == SLOT_TAKEN){		//If a slot is taken then we resend
         return MboxSend(mbox_id, msg_ptr, msg_size); 
       }   
       iterator->status = SLOT_TAKEN;
       iterator->size = msg_size;
+=======
+      if (iterator->status == SLOT_TAKEN){
+        return MboxSend(mbox_id, msg_ptr, msg_size); 
+      }   
+      iterator->status = SLOT_TAKEN;
+>>>>>>> 452-Project-Shaion
       memcpy(iterator->message, msg_ptr, msg_size); // Copy over our message into the mbox
       occupiedSlots++;
       box->filledSlots++;
@@ -249,6 +301,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size)
   }
   return -10;
 } /* MboxSend */
+<<<<<<< HEAD
 
 /* MboxSendZero-----------------------------------------------------------
    Name - MboxSendZero
@@ -266,6 +319,23 @@ int MboxSendZero(int mbox_id, void *msg_ptr, int msg_size)
 
   if (box->r_blockCount == 0){				//If we have a zero slot mailbox, with no blockCount
     memcpy(box->slots->message, msg_ptr, msg_size);	//Then we have to immediately send block
+=======
+
+/* MboxSendZero-----------------------------------------------------------
+   Name - MboxSendZero
+   Purpose - Put a message into a slot for the indicated mailbox.
+             Block the sending process if no slot available.
+   Parameters - mailbox id, pointer to data of msg, # of bytes in msg.
+   Returns - zero if successful, -1 if invalid args.
+   Side Effects - none.
+   ----------------------------------------------------------------------- */
+int MboxSendZero(int mbox_id, void *msg_ptr, int msg_size)
+{
+  boxPtr box = &MailBoxTable[mbox_id%MAXMBOX];
+
+  if (box->r_blockCount == 0){
+    memcpy(box->slots->message, msg_ptr, msg_size);
+>>>>>>> 452-Project-Shaion
     box->s_blockCount++;
     AddToSendBlockList(mbox_id, getpid());
     blockMe(SEND_BLOCKED);
@@ -302,6 +372,7 @@ int MboxCondSend(int mbox_id, void * message, int msg_size)
     USLOSS_Console("MboxCondSend(): Attempting to conditionally send to mbox: %i\n", mbox_id);
   }
 
+<<<<<<< HEAD
   if (occupiedSlots >= MAXSLOTS){		//If the box is overfull, return -2
     return -2;
   }
@@ -316,6 +387,21 @@ int MboxCondSend(int mbox_id, void * message, int msg_size)
 
   if (box->numSlots == 0){				//If the box has zero slots then run the corner case function MboxSendZero
     if (box->r_blockCount > 0){				//but only when the r_blockCount is greater than zero, return -2
+=======
+  if (occupiedSlots >= MAXSLOTS){
+    return -2;
+  }
+
+  int index = mbox_id % MAXMBOX;
+  boxPtr box = &MailBoxTable[index];
+
+  if (box->status == RELEASED){
+    return -1;
+  }
+
+  if (box->numSlots == 0){
+    if (box->r_blockCount > 0){
+>>>>>>> 452-Project-Shaion
       return MboxSendZero(mbox_id, message, msg_size);  
     }
     return -2;
@@ -361,7 +447,11 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
   ProcTable[procIndex].pos = box->r_blockCount;
   slotPtr iterator, previous;
 
+<<<<<<< HEAD
   if (box->numSlots == 0){				//Calls a zero slot reciever helper function
+=======
+  if (box->numSlots == 0){
+>>>>>>> 452-Project-Shaion
     return MboxRecvZero(mbox_id, msg_ptr, msg_size);
   }
   else {
@@ -372,6 +462,7 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
         previous = iterator;
         iterator = iterator->nextSlot;
       }
+<<<<<<< HEAD
       if (msg_size != 0){
         if ((iterator->message == NULL && iterator->status == SLOT_TAKEN) || iterator->size == 0){
           noCopyFlag = 1;
@@ -385,6 +476,9 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
       else {
         noCopyFlag = 1;
       }
+=======
+      memcpy(msg_ptr, iterator->message, msg_size);
+>>>>>>> 452-Project-Shaion
       occupiedSlots--;
       box->filledSlots--;                       // Decrement filled slots as we have taken a message out.
       // Need to unblock a sender
@@ -409,14 +503,21 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
         blockMe(RECEIVE_BLOCKED);
         box->r_blockCount--;
       }
+<<<<<<< HEAD
       if (msg_size < strlen(iterator->message)+1){
         iterator->recvd = 1;
         return -1;
       }
+=======
+>>>>>>> 452-Project-Shaion
       memcpy(msg_ptr, iterator->message, msg_size);
       occupiedSlots--;
       box->filledSlots--;
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 452-Project-Shaion
     if (previous != NULL){
       previous->nextSlot = iterator->nextSlot;  // These next steps will help maintain a FIFO Queue.
     }
@@ -435,15 +536,20 @@ int MboxReceive(int mbox_id, void *msg_ptr, int msg_size)
     DecrementProcs(mbox_id);
     if (box->s_blockCount > 0){
       UnblockSender(mbox_id);
+<<<<<<< HEAD
     }
     if (noCopyFlag){
       return zapCheck(0);
+=======
+      
+>>>>>>> 452-Project-Shaion
     }
     return zapCheck(strlen(msg_ptr) + 1);
   }
   return -10;
 } /* MboxReceive */
 
+<<<<<<< HEAD
 //This function is designer to recieve a message from a zero slot mailbox
 int MboxRecvZero(int mbox_id, void * msg_ptr, int msg_size)
 {
@@ -451,6 +557,12 @@ int MboxRecvZero(int mbox_id, void * msg_ptr, int msg_size)
   //Starts by getting the address of the box that is being recvd from
   boxPtr box = &MailBoxTable[mbox_id%MAXMBOX];
   if (box->s_blockCount == 0){			//Checks the s_blockCount: if == 0 inc the r_blockCouint and block, then check status
+=======
+int MboxRecvZero(int mbox_id, void * msg_ptr, int msg_size)
+{
+  boxPtr box = &MailBoxTable[mbox_id%MAXMBOX];
+  if (box->s_blockCount == 0){
+>>>>>>> 452-Project-Shaion
     box->r_blockCount++;
     AddToReceiveBlockList(mbox_id, getpid());
     blockMe(RECEIVE_BLOCKED);
@@ -466,8 +578,13 @@ int MboxRecvZero(int mbox_id, void * msg_ptr, int msg_size)
       return zapCheck(0);
     }
   }
+<<<<<<< HEAD
   else {									//Else we need to simply check that the message is
     if (msg_size != 0){								//the proper size, and we cpy the message and unblock
+=======
+  else {
+    if (msg_size != 0){
+>>>>>>> 452-Project-Shaion
       memcpy(msg_ptr, box->slots->message, strlen(box->slots->message));
       UnblockSender(mbox_id);
       return zapCheck(strlen(msg_ptr) + 1);
@@ -533,8 +650,11 @@ int MboxRelease(int mbox_id)
     return -1;
   }
 
+<<<<<<< HEAD
   //If it has not been taken then we decrease our count, release the mailvox, and unblock all senders
   //that have been send blocked or recieve blocked because of that box
+=======
+>>>>>>> 452-Project-Shaion
   mboxCount--;
   MailBoxTable[index].status = RELEASED;
   int sb = MailBoxTable[index].s_blockCount;
@@ -628,8 +748,13 @@ void AddToReceiveBlockList(int mbox_id, int pid)
   boxPtr box = &MailBoxTable[index];
   if (box != NULL && box->status == TAKEN){		//Similar to the send block, we check if there is a box and if it is taken
     blockPtr temp = box->receive_blocked;
+<<<<<<< HEAD
     if (temp == NULL){					//Then we check to see if the recieve block list exists
       temp = malloc(sizeof(blockList));			//if not we create the initial block and dump our info
+=======
+    if (temp == NULL){
+      temp = malloc(sizeof(blockList));
+>>>>>>> 452-Project-Shaion
       temp->message = malloc(MAX_MESSAGE);
       temp->blockedID = pid;
       box->receive_blocked = temp;
@@ -682,9 +807,23 @@ int UnblockReceiver(int mbox_id)
    ----------------------------------------------------------------------- */
 int waitDevice(int type, int unit, int * status)
 {
+<<<<<<< HEAD
   mode();
   if (DEBUG2 && debugflag2){
     USLOSS_Console("waitDevice():\n");
+=======
+  if (DEBUG2 && debugflag2){
+    USLOSS_Console("waitDevice():\n");
+  }
+  if (mode()){
+    enableInterrupts();
+  } 
+  else {
+    USLOSS_Halt(1);
+  }
+  if (type == USLOSS_CLOCK_INT){
+    MboxReceive(CLOCK_MBOX, status, MAX_MESSAGE);
+>>>>>>> 452-Project-Shaion
   }
   if (mode()){					//If our mode is the kernel we must enable interrupts
     enableInterrupts();
@@ -704,14 +843,22 @@ int waitDevice(int type, int unit, int * status)
   if (isZapped()){					//Checks if zapped
     return -1;
   }
+<<<<<<< HEAD
   //disableInterrupts();
+=======
+  disableInterrupts();
+>>>>>>> 452-Project-Shaion
   return 0;
 } /* waitDevice */
 
 void dumpMboxes()
 {
+<<<<<<< HEAD
   mode();
   for (int i = 0; i < MAXMBOX; i++){			//Iterates over all mailboxes and prints their status
+=======
+  for (int i = 0; i < MAXMBOX; i++){
+>>>>>>> 452-Project-Shaion
     if (i % 5 == 0){
       printf("\n");
     }
@@ -729,7 +876,10 @@ void dumpMboxes()
   }
 }
 
+<<<<<<< HEAD
 //Helper function that uses isZapped to check for zapped process in the messaging system
+=======
+>>>>>>> 452-Project-Shaion
 int zapCheck(int check)
 {
   if (isZapped()){
@@ -746,8 +896,13 @@ int zapCheck(int check)
    ----------------------------------------------------------------------- */
 void DecrementProcs(int mbox_id)
 {
+<<<<<<< HEAD
   for (int i = 0; i < 50; i++){			//iterates over process table and when we find our mbox id we decrement the
     if (ProcTable[i].mboxID == mbox_id){	//position of the item in the table
+=======
+  for (int i = 0; i < 50; i++){
+    if (ProcTable[i].mboxID == mbox_id){
+>>>>>>> 452-Project-Shaion
       ProcTable[i].pos--;
     }
   }
@@ -772,8 +927,13 @@ void check_kernel_mode(char *name)
 int mode()
 {
   unsigned int mode;
+<<<<<<< HEAD
   mode = USLOSS_PsrGet();						//Simply gets the psr and uses the psr of the current mode to
   if ((mode & USLOSS_PSR_CURRENT_MODE) == 0){				//check for kernel mode
+=======
+  mode = USLOSS_PsrGet();
+  if ((mode & USLOSS_PSR_CURRENT_MODE) == 0){
+>>>>>>> 452-Project-Shaion
     USLOSS_Console("Not running in kernel mode. Halting...\n");
     USLOSS_Halt(1);
     return 0;
@@ -787,7 +947,11 @@ int mode()
    ----------------------------------------------------------------------- */
 void disableInterrupts()
 {
+<<<<<<< HEAD
   if (mode()){					//If we are in kernel mode we may disable interrupts via USLOSS processes
+=======
+  if (mode()){
+>>>>>>> 452-Project-Shaion
     unsigned int mode = USLOSS_PsrGet();
     mode &= ~(USLOSS_PSR_CURRENT_INT);
     int a = USLOSS_PsrSet(mode);
@@ -803,7 +967,11 @@ void disableInterrupts()
    ----------------------------------------------------------------------- */
 void enableInterrupts()
 {
+<<<<<<< HEAD
   if (mode()){					//If we are int kernel mode we enable interrupts via USLOSS processes
+=======
+  if (mode()){
+>>>>>>> 452-Project-Shaion
     unsigned int mode = USLOSS_PsrGet();
     mode |= USLOSS_PSR_CURRENT_INT;
     int a = USLOSS_PsrSet(mode);
