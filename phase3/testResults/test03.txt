@@ -1,0 +1,8 @@
+start3(): started.  Calling Spawn for Child1
+Child1(): starting
+Child2(): starting
+Child2(): done
+Child1(): done
+start3(): after spawn of 5
+start3(): Parent done. Calling Terminate.
+All processes completed.

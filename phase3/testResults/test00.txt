@@ -1,0 +1,7 @@
+start3(): started.  Calling Spawn for Child1
+start3(): fork 5
+Child1(): starting
+Child1(): done
+start3(): result of wait, pid = 5, status = 9
+start3(): Parent done. Calling Terminate.
+All processes completed.
