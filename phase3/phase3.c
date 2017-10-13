@@ -7,13 +7,17 @@
 #include <phase2.h>
 #include <phase3.h>
 
+#define INDEX getpid()%MAXPROC
+
 /* ------------------------- Function Prototypes ------------------------- */
 /* ---------- Externs ---------- */
 extern int start3(char*);
 
 /* ---------- Void Prototypes ---------- */
+void terminate(systemArgs * args);
 void spawn(systemArgs * args);
 void wait2(systemArgs * args);
+void terminateReal();
 void setToUserMode();
 
 /* ---------- Int Prototypes ---------- */
@@ -23,6 +27,7 @@ int spawnLaunch();
 
 /* ------------------------- Globals ------------------------- */
 p3proc ProcTable[MAXPROC];
+int debugFlag = 1;
 
 int start2(char *arg)
 {
@@ -35,8 +40,9 @@ int start2(char *arg)
     /*
      * Data structure initialization as needed...
      */
-    systemCallVec[SYS_SPAWN] = spawn;
-    systemCallVec[SYS_WAIT]  = wait2;
+    systemCallVec[SYS_SPAWN]        = spawn;
+    systemCallVec[SYS_WAIT]         = wait2;
+    systemCallVec[SYS_TERMINATE]    = terminate;
 
     /*
      * Create first user-level process and wait for it to finish.
@@ -87,30 +93,40 @@ int start2(char *arg)
    -------------------------------------------------------------------- */
 void spawn(systemArgs * args)
 {
-    if(args->arg1 == NULL){
+    if (debugFlag){
+        printf("spawn():\n");
+    }
+    if (args->arg1 == NULL) {
         USLOSS_Console("Null function pointer. Halting...(Shaion you will need to change this)\n");
         USLOSS_Halt(1);
     }
-    if((int)args->arg3 < USLOSS_MIN_STACK){
+    if ((int)args->arg3 < USLOSS_MIN_STACK) {
         USLOSS_Console("Stacksize is too small. Halting...(Shaion you will need to change this)\n");
         USLOSS_Halt(1);
     }
-    if(args->arg4 < 0 || (int)args->arg4 >= 6){
+    if (args->arg4 < 0 || (int)args->arg4 >= 6) {
         USLOSS_Console("Priority is out of bounds. Halting...(Shaion you will need to change this)\n");
         USLOSS_Halt(1);
     }
     int pid = spawnReal(args->arg5, args->arg1, args->arg2, (int)args->arg3, (int)args->arg4);
+    printf("after spawn real\n");
     ProcTable[pid%MAXPROC].startFunc = args->arg1;
     ProcTable[pid%MAXPROC].arg = args->arg2;
+
+    if (ProcTable[INDEX].children == 1) {
+        printf("are we here?\n");
+        ProcTable[INDEX].child = &ProcTable[pid%MAXPROC];
+    }
+    else {
+        procPtr temp = ProcTable[INDEX].child;
+        while(temp->nextSibling != NULL){
+            temp = temp->nextSibling;
+        }
+        printf("are we here2\n");
+    }
     args->arg1 = pid;
     setToUserMode();
 } /* spawn */
-
-void setToUserMode(){
-    unsigned int currentMode = USLOSS_PsrGet();
-    unsigned int newMode = currentMode & !1;
-    int check = USLOSS_PsrSet(newMode);
-}
 
 /* spawnReal--------------------------------------------------------------
    Name - spawnReal
@@ -126,9 +142,27 @@ void setToUserMode(){
    -------------------------------------------------------------------- */
 int spawnReal(char * name, int(*startFunc)(char *), char * arg, int stacksize, int priority)
 {
+    if (debugFlag){
+        printf("spawnReal():\n");
+        printf("%s - %s - %i - %i\n", name, arg, stacksize, priority);
+    }
+    ProcTable[INDEX].children++;
     int a = fork1(name, spawnLaunch, arg, stacksize, priority);
+    printf("after fork1?\n");
     return a;
 } /* spawnReal */
+
+/* setToUserMode----------------------------------------------------------
+   Name - setToUserMode
+   Purpose - to set the PSR to user mode
+   Parameters - none
+   Returns - none
+   -------------------------------------------------------------------- */
+void setToUserMode(){
+    unsigned int currentMode = USLOSS_PsrGet();
+    unsigned int newMode = currentMode & !1;
+    int check = USLOSS_PsrSet(newMode);
+} /* setToUserMode */
 
 /* spawnLaunch------------------------------------------------------------
    Name - spawnLaunch
@@ -156,7 +190,15 @@ int spawnLaunch()
    -------------------------------------------------------------------- */
 void wait2(systemArgs * args)
 {
-    args->arg1 = waitReal(args->arg2);
+    int status;
+    args->arg1 = waitReal(&status);
+    if(args->arg1 > 0){
+        args->arg4 = 0;
+    } 
+    else {
+        args->arg4 = -1;
+    }
+    args->arg2 = status;
     setToUserMode();
 } /* wait */
 
@@ -173,4 +215,45 @@ int waitReal(int* status)
     result = join(status);
     return result;
 } /* waitReal */
+
+/* terminate--------------------------------------------------------------
+   Name - terminate
+   Purpose - calls terminateReal and quits after it returns 
+   Parameters - sysArgs that contain the quit status for us to use
+   Returns - none
+   -------------------------------------------------------------------- */
+void terminate(systemArgs * args)
+{
+    terminateReal();
+    setToUserMode();
+    quit((int)args->arg1);
+} /* terminate */
+
+/* terminateReal----------------------------------------------------------
+   Name - terminateReal
+   Purpose - zaps all of the children of current process if it has any. 
+                If it did have children then it keeps calling waitReal
+                until it returns <= 0.
+   Parameters - none
+   Returns - void 
+   -------------------------------------------------------------------- */
+void terminateReal()
+{
+    int status;
+    int result;
+    procPtr temp = ProcTable[getpid() % MAXPROC].child;
+    while (temp != NULL && temp->nextSibling != NULL){
+        zap(temp->pid);
+    }
+    result = waitReal(&status);
+    while(result > 0){
+        result = waitReal(&status);
+    }
+} /* terminateReal */
+
+
+
+
+
+
 
