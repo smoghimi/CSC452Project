@@ -11,6 +11,7 @@
 #include <phase1.h>
 #include <phase2.h>
 #include <phase3.h>
+#include <stdio.h>
 #include <libuser.h>
 
 #define CHECKMODE {    \

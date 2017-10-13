@@ -9,7 +9,8 @@
 
 typedef struct p3proc {
 	int 	pid;
-	int (* startFunc) (char *);
+	int 	(* startFunc) (char *);
+	char * 	arg;
 } p3proc;
 
 #endif /* _PHASE3_H */

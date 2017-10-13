@@ -7,17 +7,24 @@
 #include <phase2.h>
 #include <phase3.h>
 
+/* ------------------------- Function Prototypes ------------------------- */
+/* ---------- Externs ---------- */
+extern int start3(char*);
+
+/* ---------- Void Prototypes ---------- */
 void spawn(systemArgs * args);
+void wait2(systemArgs * args);
+void setToUserMode();
+
+/* ---------- Int Prototypes ---------- */
 int spawnReal(char* name, int(*func)(char *), char*arg, int stacksize, int priority);
 int waitReal(int*);
-extern int start3(char*);
 int spawnLaunch();
 
-
+/* ------------------------- Globals ------------------------- */
 p3proc ProcTable[MAXPROC];
 
-int
-start2(char *arg)
+int start2(char *arg)
 {
     int pid;
     int status;
@@ -29,7 +36,7 @@ start2(char *arg)
      * Data structure initialization as needed...
      */
     systemCallVec[SYS_SPAWN] = spawn;
-
+    systemCallVec[SYS_WAIT]  = wait2;
 
     /*
      * Create first user-level process and wait for it to finish.
@@ -60,6 +67,8 @@ start2(char *arg)
      * return to the user code that called Spawn.
      */
     pid = spawnReal("start3", start3, NULL, USLOSS_MIN_STACK, 3);
+    ProcTable[pid].startFunc = start3;
+    ProcTable[pid].arg = NULL;
 
     /* Call the waitReal version of your wait code here.
      * You call waitReal (rather than Wait) because start2 is running
@@ -70,6 +79,12 @@ start2(char *arg)
     return 0;
 } /* start2 */
 
+/* spawn------------------------------------------------------------------
+   Name - spawn
+   Purpose - to spawn a new process!
+   Parameters - system args which contain everything we need to call fork.
+   Returns - void
+   -------------------------------------------------------------------- */
 void spawn(systemArgs * args)
 {
     if(args->arg1 == NULL){
@@ -86,26 +101,76 @@ void spawn(systemArgs * args)
     }
     int pid = spawnReal(args->arg5, args->arg1, args->arg2, (int)args->arg3, (int)args->arg4);
     ProcTable[pid%MAXPROC].startFunc = args->arg1;
-    printf("%i\n", pid);
+    ProcTable[pid%MAXPROC].arg = args->arg2;
+    args->arg1 = pid;
+    setToUserMode();
+} /* spawn */
+
+void setToUserMode(){
+    unsigned int currentMode = USLOSS_PsrGet();
+    unsigned int newMode = currentMode & !1;
+    int check = USLOSS_PsrSet(newMode);
 }
 
+/* spawnReal--------------------------------------------------------------
+   Name - spawnReal
+   Purpose - Wait for a child process (if one has been forked) to quit.  If 
+             one has already quit, don't wait.
+   Parameters - name: the name of the process
+                startfunc: the function that spawnLaunch will call
+                arg: the argument for the process
+                stacksize: the size of the stack
+                priority: the priority of the process
+   Returns - the process id that the the process being created returns.
+                In other words this returns what fork1 returns.
+   -------------------------------------------------------------------- */
 int spawnReal(char * name, int(*startFunc)(char *), char * arg, int stacksize, int priority)
 {
     int a = fork1(name, spawnLaunch, arg, stacksize, priority);
     return a;
-}
+} /* spawnReal */
 
+/* spawnLaunch------------------------------------------------------------
+   Name - spawnLaunch
+   Purpose - launches the function stored in the current processes PCB
+   Parameters - none
+   Returns - Whatever the function that we are launching returned.
+   -------------------------------------------------------------------- */
 int spawnLaunch()
 {
     unsigned int a = USLOSS_PsrGet();
     a ^= USLOSS_PSR_CURRENT_MODE;
-    USLOSS_PsrSet(a);
-    start3("a");
-    return 0;
-}
+    a = USLOSS_PsrSet(a);
+    int index = getpid() % MAXPROC;
+    int returnValue;
+    returnValue = ProcTable[index].startFunc(ProcTable[index].arg);
+    return returnValue;
+} /* spawnLaunch */
 
+/* wait-------------------------------------------------------------------
+   Name - wait
+   Purpose - calls waitReal 
+   Parameters - sysArgs that we will fill with the return result of 
+                waitReal
+   Returns - none
+   -------------------------------------------------------------------- */
+void wait2(systemArgs * args)
+{
+    args->arg1 = waitReal(args->arg2);
+    setToUserMode();
+} /* wait */
+
+/* waitReal---------------------------------------------------------------
+   Name - waitReal
+   Purpose - calls join
+   Parameters - a status int that will be filled with the result of our
+                join call
+   Returns - whatever join returns
+   ------------------------------------------------------------------------ */
 int waitReal(int* status)
 {
-    return 0;
-}
+    int result;
+    result = join(status);
+    return result;
+} /* waitReal */
 
