@@ -103,7 +103,7 @@ void Terminate(int status)
 
     CHECKMODE;
     sysArg.number = SYS_TERMINATE;
-    sysArg.arg1 = status;
+    sysArg.arg1 = (void *) status;
 
     USLOSS_Syscall(&sysArg);
 } /* end of Terminate */
@@ -119,8 +119,16 @@ void Terminate(int status)
  */
 int SemCreate(int value, int *semaphore)
 {
-    int something = 0;
-    return something;
+    USLOSS_Sysargs sysArg;
+
+    CHECKMODE;
+    sysArg.number = SYS_SEMCREATE;
+    sysArg.arg1 = (void *) value;
+
+    USLOSS_Syscall(&sysArg);
+
+    semaphore = (int) sysArg.arg1;
+    return (int) sysArg.arg4;
 } /* end of SemCreate */
 
 

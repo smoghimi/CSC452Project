@@ -15,19 +15,23 @@ extern int start3(char*);
 
 /* ---------- Void Prototypes ---------- */
 void terminate(systemArgs * args);
+void semcreate(systemArgs * args);
 void spawn(systemArgs * args);
 void wait2(systemArgs * args);
+void setToKernelMode();
 void terminateReal();
 void setToUserMode();
 
 /* ---------- Int Prototypes ---------- */
 int spawnReal(char* name, int(*func)(char *), char*arg, int stacksize, int priority);
+int semcreateReal(int value);
 int waitReal(int*);
 int spawnLaunch();
 
 /* ------------------------- Globals ------------------------- */
 p3proc ProcTable[MAXPROC];
-int debugFlag = 1;
+int debugFlag = 0;
+int currentPID = 4;
 
 int start2(char *arg)
 {
@@ -109,12 +113,8 @@ void spawn(systemArgs * args)
         USLOSS_Halt(1);
     }
     int pid = spawnReal(args->arg5, args->arg1, args->arg2, (int)args->arg3, (int)args->arg4);
-    printf("after spawn real\n");
-    ProcTable[pid%MAXPROC].startFunc = args->arg1;
-    ProcTable[pid%MAXPROC].arg = args->arg2;
 
     if (ProcTable[INDEX].children == 1) {
-        printf("are we here?\n");
         ProcTable[INDEX].child = &ProcTable[pid%MAXPROC];
     }
     else {
@@ -122,9 +122,8 @@ void spawn(systemArgs * args)
         while(temp->nextSibling != NULL){
             temp = temp->nextSibling;
         }
-        printf("are we here2\n");
     }
-    args->arg1 = pid;
+    args->arg1 = (void *) pid;
     setToUserMode();
 } /* spawn */
 
@@ -147,8 +146,11 @@ int spawnReal(char * name, int(*startFunc)(char *), char * arg, int stacksize, i
         printf("%s - %s - %i - %i\n", name, arg, stacksize, priority);
     }
     ProcTable[INDEX].children++;
+    ProcTable[currentPID%MAXPROC].startFunc = startFunc;
+    ProcTable[currentPID%MAXPROC].arg = arg;
+    ProcTable[currentPID%MAXPROC].pid = currentPID;
+    currentPID++;
     int a = fork1(name, spawnLaunch, arg, stacksize, priority);
-    printf("after fork1?\n");
     return a;
 } /* spawnReal */
 
@@ -164,6 +166,18 @@ void setToUserMode(){
     int check = USLOSS_PsrSet(newMode);
 } /* setToUserMode */
 
+/* setToKernelMode----------------------------------------------------------
+   Name - setToKernelMode
+   Purpose - to set the PSR to kernel mode
+   Parameters - none
+   Returns - none
+   -------------------------------------------------------------------- */
+void setToKernelMode(){
+    unsigned int currentMode = USLOSS_PsrGet();
+    unsigned int newMode = currentMode | 1;
+    int check = USLOSS_PsrSet(newMode);
+} /* setToKernelMode */
+
 /* spawnLaunch------------------------------------------------------------
    Name - spawnLaunch
    Purpose - launches the function stored in the current processes PCB
@@ -178,6 +192,8 @@ int spawnLaunch()
     int index = getpid() % MAXPROC;
     int returnValue;
     returnValue = ProcTable[index].startFunc(ProcTable[index].arg);
+    setToKernelMode();
+    quit(0);
     return returnValue;
 } /* spawnLaunch */
 
@@ -191,14 +207,14 @@ int spawnLaunch()
 void wait2(systemArgs * args)
 {
     int status;
-    args->arg1 = waitReal(&status);
+    args->arg1 = (void *) waitReal(&status);
     if(args->arg1 > 0){
         args->arg4 = 0;
     } 
     else {
-        args->arg4 = -1;
+        args->arg4 = (void *) -1;
     }
-    args->arg2 = status;
+    args->arg2 = (void *) status;
     setToUserMode();
 } /* wait */
 
@@ -250,6 +266,16 @@ void terminateReal()
         result = waitReal(&status);
     }
 } /* terminateReal */
+
+void semcreate(systemArgs * args)
+{
+
+}
+
+int semcreateReal(int value)
+{
+  
+}
 
 
 
