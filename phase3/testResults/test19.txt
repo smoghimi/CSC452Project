@@ -1,0 +1,4 @@
+start3(): started
+start3(): elapsed time in middle =  6 Should be close, but does not have to be an exact match
+start3(): elapsed time at end    = 13 Should be close, but does not have to be an exact match
+All processes completed.

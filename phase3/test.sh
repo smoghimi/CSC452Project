@@ -5,7 +5,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 #make clean > temp.out
 rm myTests/* > temp.out
-for VAR in {0..7}
+for VAR in {0..8}
 do
 	make test0"$VAR" > temp.out
 	./test0"$VAR" | grep -v '^ ' | grep -v '^PID' > myTests/myTest0"$VAR".out

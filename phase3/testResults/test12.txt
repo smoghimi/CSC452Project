@@ -1,0 +1,31 @@
+start3(): started
+start3(): calling Spawn for Child1a
+Child1a(): starting
+Child1a(): current time of day =  61  Should be close, but does not have to be an exact match
+Child1a(): current CPU time =  20     Should be close, but does not have to be an exact match
+Child1a(): current time of day =  74  Should be close, but does not have to be an exact match
+Child1a(): current CPU time =  34     Should be close, but does not have to be an exact match
+Child1a(): current time of day =  86  Should be close, but does not have to be an exact match
+Child1a(): current CPU time =  48     Should be close, but does not have to be an exact match
+Child1a(): done
+start3(): calling Spawn for Child1b
+Child1b(): starting
+Child1b(): current time of day = 127  Should be close, but does not have to be an exact match
+Child1b(): current CPU time =  17     Should be close, but does not have to be an exact match
+Child1b(): current time of day = 139  Should be close, but does not have to be an exact match
+Child1b(): current CPU time =  31     Should be close, but does not have to be an exact match
+Child1b(): current time of day = 154  Should be close, but does not have to be an exact match
+Child1b(): current CPU time =  47     Should be close, but does not have to be an exact match
+Child1b(): done
+start3(): calling Spawn for Child1c
+Child1c(): starting
+Child1c(): current time of day = 197  Should be close, but does not have to be an exact match
+Child1c(): current CPU time =  18     Should be close, but does not have to be an exact match
+Child1c(): current time of day = 211  Should be close, but does not have to be an exact match
+Child1c(): current CPU time =  34     Should be close, but does not have to be an exact match
+Child1c(): current time of day = 225  Should be close, but does not have to be an exact match
+Child1c(): current CPU time =  49     Should be close, but does not have to be an exact match
+Child1c(): done
+start3(): calling Spawn for Child2
+start3(): Parent done. Calling Terminate.
+All processes completed.

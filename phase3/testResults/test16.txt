@@ -1,0 +1,11 @@
+start3(): started
+start3(): After P in the CS
+Child1(): starting
+start3(): fork 5
+Child2(): starting
+start3(): fork 6
+start3(): After SemFree with processes blocked
+start3(): status of quit child = 1
+start3(): status of quit child = 1
+start3(): Parent done
+All processes completed.

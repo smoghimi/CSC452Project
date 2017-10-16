@@ -17,8 +17,10 @@ extern int start3(char*);
 void terminate(systemArgs * args);
 void semcreate(systemArgs * args);
 void getpid2(systemArgs * args);
+void semFree(systemArgs * args);
 void spawn(systemArgs * args);
 void wait2(systemArgs * args);
+void semFreeReal(int handle);
 void semP(systemArgs * args);
 void semV(systemArgs * args);
 void semPReal(int handle);
@@ -39,9 +41,11 @@ int semcreateReal(int value);
 p3proc ProcTable[MAXPROC];
 int SemTable[MAXSEMS];
 int MboxTable[MAXSEMS];
+int BlockedSems[MAXSEMS];
 int debugFlag = 0;
 int currentPID = 4;
 int currentSems = 0;
+int semCount = 0;
 
 int start2(char *arg)
 {
@@ -65,6 +69,7 @@ int start2(char *arg)
     systemCallVec[SYS_SEMP]         = semP;
     systemCallVec[SYS_SEMV]         = semV;
     systemCallVec[SYS_GETPID]       = getpid2;
+    systemCallVec[SYS_SEMFREE]      = semFree;
 
     /*
      * Create first user-level process and wait for it to finish.
@@ -274,16 +279,23 @@ void semcreate(systemArgs * args)
     } 
     if (args->arg1 < 0){
         args->arg4 = -1;
+        setToUserMode();
         return;
     }
-    if (currentSems >= MAXSEMS){
-        args->arg4 = -1;
+    if (semCount >= MAXSEMS){
+        args->arg4 = (void *) -1;
+        setToUserMode();
         return;
     }
 
     args->arg1 = (void *)semcreateReal((int)args->arg1);
-    currentSems++;
-    args->arg4 = 0;
+    if ((int)args->arg1 == -3){
+        args->arg4 = (void *) -1;
+    } else {
+        semCount++;
+        args->arg4 = 0;
+    }
+    setToUserMode();
 } /* semcreate */
 
 /* semcreateReal----------------------------------------------------------
@@ -295,12 +307,15 @@ void semcreate(systemArgs * args)
    -------------------------------------------------------------------- */
 int semcreateReal(int value)
 {
-    int counter = MAXSEMS;
-    while (SemTable[currentSems%MAXSEMS] != -1 || counter--){
-        SemTable[currentSems%MAXSEMS] = value;
-        MboxTable[currentSems%MAXSEMS] = MboxCreate(0, 0);
-        break;
+    int counter = MAXSEMS+1;
+    while (SemTable[currentSems%MAXSEMS] != -1 && counter--){
+        currentSems++;
     }
+    if(counter == 0){
+        return -3;
+    }
+    SemTable[currentSems%MAXSEMS] = value;
+    MboxTable[currentSems%MAXSEMS] = MboxCreate(0, 0);
     return currentSems;
 } /* semcreateReal */
 
@@ -324,6 +339,7 @@ void semP(systemArgs * args)
 
     semPReal(handle);
     args->arg4 = 0;
+    setToUserMode();
 } /* semP */
 
 /* semPReal---------------------------------------------------------------
@@ -341,7 +357,9 @@ void semPReal(int handle)
     else {
         // Block ourselves here
         while(SemTable[handle] <= 0){
+            BlockedSems[handle]++;
             MboxReceive(MboxTable[handle], NULL, 0);
+            BlockedSems[handle]--;
         }
         SemTable[handle]--;
     }
@@ -367,6 +385,7 @@ void semV(systemArgs * args)
 
     semVReal(handle);
     args->arg4 = 0;
+    setToUserMode();
 } /* semV */
 
 /* semVReal---------------------------------------------------------------
@@ -381,6 +400,43 @@ void semVReal(int handle)
     SemTable[handle]++;
     MboxCondSend(MboxTable[handle], NULL, 0);
 } /* semVReal */
+
+/* semFree----------------------------------------------------------------
+   Name - semFree
+   Purpose - check if the handle is valid and then call semFreeReal with
+                the valid handle
+   Parameters - systemArgs
+   Returns - void 
+   -------------------------------------------------------------------- */
+void semFree(systemArgs * args)
+{
+    int handle = (int) args->arg1;
+    if (SemTable[handle] < 0){
+        args->arg4 = (void *) -1;
+        return;
+    }
+    if (BlockedSems[handle] == 0){
+        semCount--;
+        args->arg4 = (void *) 0;
+        semFreeReal(handle);
+    }
+    else {
+        //deal with the case where we have blocked process on our sem.
+    }
+    setToUserMode();
+} /* semFree */
+
+/* semFreeReal------------------------------------------------------------
+   Name - semFreeReal
+   Purpose - Sets the semaphore at handle to be -1 or freed.
+   Parameters - semaphore handle
+   Returns - void 
+   -------------------------------------------------------------------- */
+void semFreeReal(int handle)
+{
+
+    SemTable[handle] = -1;
+} /* semFreeReal */
 
 /* getpid2----------------------------------------------------------------
    Name - getpid2
@@ -417,8 +473,6 @@ void setToKernelMode(){
     unsigned int newMode = currentMode | 1;
     int check = USLOSS_PsrSet(newMode);
 } /* setToKernelMode */
-
-
 
 
 

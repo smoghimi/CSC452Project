@@ -189,7 +189,15 @@ int SemV(int semaphore)
  */
 int SemFree(int semaphore)
 {
-    int something = 0;
+    USLOSS_Sysargs sysArgs;
+
+    CHECKMODE;
+    sysArgs.number = SYS_SEMFREE;
+    sysArgs.arg1 = (void *) semaphore;
+
+    USLOSS_Syscall(&sysArgs);
+
+    int something = (int) sysArgs.arg4;
     return something;
 } /* end of SemFree */
 

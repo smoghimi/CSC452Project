@@ -1,0 +1,4 @@
+start3(): started.  Calling SemCreate
+start3(): freeing one semaphore
+start3(): Correct result from last call to SemCreate()
+All processes completed.

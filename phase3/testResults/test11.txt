@@ -1,0 +1,22 @@
+start3(): started
+start3(): calling Spawn for Child1a
+Child1a(): starting
+Child1a(): current time = 14  Should be close, but does not have to be an exact match
+Child1a(): current time = 20  Should be close, but does not have to be an exact match
+Child1a(): current time = 27  Should be close, but does not have to be an exact match
+Child1a(): done
+start3(): calling Spawn for Child1b
+Child1b(): starting
+Child1b(): current time = 14  Should be close, but does not have to be an exact match
+Child1b(): current time = 19  Should be close, but does not have to be an exact match
+Child1b(): current time = 25  Should be close, but does not have to be an exact match
+Child1b(): done
+start3(): calling Spawn for Child1c
+Child1c(): starting
+Child1c(): current time = 12  Should be close, but does not have to be an exact match
+Child1c(): current time = 21  Should be close, but does not have to be an exact match
+Child1c(): current time = 28  Should be close, but does not have to be an exact match
+Child1c(): done
+start3(): calling Spawn for Child2
+start3(): Parent done. Calling Terminate.
+All processes completed.
