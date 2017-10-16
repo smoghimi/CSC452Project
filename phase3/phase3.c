@@ -16,6 +16,7 @@ extern int start3(char*);
 /* ---------- Void Prototypes ---------- */
 void terminate(systemArgs * args);
 void semcreate(systemArgs * args);
+void getpid2(systemArgs * args);
 void spawn(systemArgs * args);
 void wait2(systemArgs * args);
 void semP(systemArgs * args);
@@ -63,6 +64,7 @@ int start2(char *arg)
     systemCallVec[SYS_SEMCREATE]    = semcreate;
     systemCallVec[SYS_SEMP]         = semP;
     systemCallVec[SYS_SEMV]         = semV;
+    systemCallVec[SYS_GETPID]       = getpid2;
 
     /*
      * Create first user-level process and wait for it to finish.
@@ -169,30 +171,6 @@ int spawnReal(char * name, int(*startFunc)(char *), char * arg, int stacksize, i
     int a = fork1(name, spawnLaunch, arg, stacksize, priority);
     return a;
 } /* spawnReal */
-
-/* setToUserMode----------------------------------------------------------
-   Name - setToUserMode
-   Purpose - to set the PSR to user mode
-   Parameters - none
-   Returns - none
-   -------------------------------------------------------------------- */
-void setToUserMode(){
-    unsigned int currentMode = USLOSS_PsrGet();
-    unsigned int newMode = currentMode & !1;
-    int check = USLOSS_PsrSet(newMode);
-} /* setToUserMode */
-
-/* setToKernelMode----------------------------------------------------------
-   Name - setToKernelMode
-   Purpose - to set the PSR to kernel mode
-   Parameters - none
-   Returns - none
-   -------------------------------------------------------------------- */
-void setToKernelMode(){
-    unsigned int currentMode = USLOSS_PsrGet();
-    unsigned int newMode = currentMode | 1;
-    int check = USLOSS_PsrSet(newMode);
-} /* setToKernelMode */
 
 /* spawnLaunch------------------------------------------------------------
    Name - spawnLaunch
@@ -369,6 +347,13 @@ void semPReal(int handle)
     }
 } /* semPReal */
 
+/* semV-------------------------------------------------------------------
+   Name - semV
+   Purpose - checks the input args to see if the handle exists and then
+                calls semVReal
+   Parameters - systemArgs 
+   Returns - void 
+   -------------------------------------------------------------------- */
 void semV(systemArgs * args)
 {
     if (debugFlag){
@@ -384,11 +369,54 @@ void semV(systemArgs * args)
     args->arg4 = 0;
 } /* semV */
 
+/* semVReal---------------------------------------------------------------
+   Name - semVReal
+   Purpose - Increments the semaphore and then conditionally sends to
+                the semaphores mailbox to unblock a blocked process.
+   Parameters - semaphore handle
+   Returns - void 
+   -------------------------------------------------------------------- */
 void semVReal(int handle)
 {
     SemTable[handle]++;
     MboxCondSend(MboxTable[handle], NULL, 0);
-}
+} /* semVReal */
+
+/* getpid2----------------------------------------------------------------
+   Name - getpid2
+   Purpose - just returns the pid of the currently running process
+   Parameters - takes in systemArgs
+   Returns - void 
+   -------------------------------------------------------------------- */
+void getpid2(systemArgs * args)
+{
+    args->arg1 = getpid();
+    setToUserMode();
+} /* getpid2 */
+
+/* setToUserMode----------------------------------------------------------
+   Name - setToUserMode
+   Purpose - to set the PSR to user mode
+   Parameters - none
+   Returns - none
+   -------------------------------------------------------------------- */
+void setToUserMode(){
+    unsigned int currentMode = USLOSS_PsrGet();
+    unsigned int newMode = currentMode & !1;
+    int check = USLOSS_PsrSet(newMode);
+} /* setToUserMode */
+
+/* setToKernelMode--------------------------------------------------------
+   Name - setToKernelMode
+   Purpose - to set the PSR to kernel mode
+   Parameters - none
+   Returns - none
+   -------------------------------------------------------------------- */
+void setToKernelMode(){
+    unsigned int currentMode = USLOSS_PsrGet();
+    unsigned int newMode = currentMode | 1;
+    int check = USLOSS_PsrSet(newMode);
+} /* setToKernelMode */
 
 
 

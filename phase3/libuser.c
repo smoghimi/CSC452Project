@@ -230,6 +230,14 @@ void CPUTime(int *cpu)
  */
 void GetPID(int *pid)                           
 {
+    USLOSS_Sysargs sysArgs;
+
+    CHECKMODE;
+    sysArgs.number = SYS_GETPID;
+
+    USLOSS_Syscall(&sysArgs);
+
+    *pid = sysArgs.arg1;
 } /* end of GetPID */
 
 /* end libuser.c */
