@@ -11,6 +11,8 @@
 #include <phase1.h>
 #include <phase2.h>
 #include <phase3.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <libuser.h>
 
 #define CHECKMODE {    \
@@ -98,7 +100,13 @@ int Wait(int *pid, int *status)
  */
 void Terminate(int status)
 {
-    
+    USLOSS_Sysargs sysArg;
+
+    CHECKMODE;
+    sysArg.number = SYS_TERMINATE;
+    sysArg.arg1 = (void *) status;
+
+    USLOSS_Syscall(&sysArg);
 } /* end of Terminate */
 
 
@@ -112,8 +120,16 @@ void Terminate(int status)
  */
 int SemCreate(int value, int *semaphore)
 {
-    int something = 0;
-    return something;
+    USLOSS_Sysargs sysArg;
+
+    CHECKMODE;
+    sysArg.number = SYS_SEMCREATE;
+    sysArg.arg1 = (void *) value;
+
+    USLOSS_Syscall(&sysArg);
+
+    *semaphore = sysArg.arg1;
+    return (int) sysArg.arg4;
 } /* end of SemCreate */
 
 
@@ -127,7 +143,15 @@ int SemCreate(int value, int *semaphore)
  */
 int SemP(int semaphore)
 {
-    int something = 0;
+    USLOSS_Sysargs sysArg;
+
+    CHECKMODE;
+    sysArg.number = SYS_SEMP;
+    sysArg.arg1 = (void *) semaphore;
+
+    USLOSS_Syscall(&sysArg);
+
+    int something = (int) sysArg.arg4;
     return something;
 } /* end of SemP */
 
@@ -142,7 +166,15 @@ int SemP(int semaphore)
  */
 int SemV(int semaphore)
 {
-    int something = 0;
+    USLOSS_Sysargs sysArg;
+
+    CHECKMODE;
+    sysArg.number = SYS_SEMV;
+    sysArg.arg1 = (void *) semaphore;
+
+    USLOSS_Syscall(&sysArg);
+
+    int something = (int) sysArg.arg4;
     return something;
 } /* end of SemV */
 
@@ -157,7 +189,15 @@ int SemV(int semaphore)
  */
 int SemFree(int semaphore)
 {
-    int something = 0;
+    USLOSS_Sysargs sysArgs;
+
+    CHECKMODE;
+    sysArgs.number = SYS_SEMFREE;
+    sysArgs.arg1 = (void *) semaphore;
+
+    USLOSS_Syscall(&sysArgs);
+
+    int something = (int) sysArgs.arg4;
     return something;
 } /* end of SemFree */
 
@@ -198,6 +238,14 @@ void CPUTime(int *cpu)
  */
 void GetPID(int *pid)                           
 {
+    USLOSS_Sysargs sysArgs;
+
+    CHECKMODE;
+    sysArgs.number = SYS_GETPID;
+
+    USLOSS_Syscall(&sysArgs);
+
+    *pid = sysArgs.arg1;
 } /* end of GetPID */
 
 /* end libuser.c */

@@ -1,0 +1,16 @@
+start3(): started
+start3(): calling Spawn for Child1a
+Child1a(): starting
+Child1a(): pid = 5
+Child1a(): done
+start3(): calling Spawn for Child1b
+Child1b(): starting
+Child1b(): pid = 6
+Child1b(): done
+start3(): calling Spawn for Child1c
+Child1c(): starting
+Child1c(): pid = 7
+Child1c(): done
+start3(): calling Spawn for Child2
+start3(): Parent done. Calling Terminate.
+All processes completed.
