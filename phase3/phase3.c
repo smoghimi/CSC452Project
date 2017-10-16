@@ -18,25 +18,38 @@ void terminate(systemArgs * args);
 void semcreate(systemArgs * args);
 void spawn(systemArgs * args);
 void wait2(systemArgs * args);
+void semP(systemArgs * args);
+void semV(systemArgs * args);
+void semPReal(int handle);
+void semVReal(int handle);
 void setToKernelMode();
 void terminateReal();
 void setToUserMode();
 
 /* ---------- Int Prototypes ---------- */
 int spawnReal(char* name, int(*func)(char *), char*arg, int stacksize, int priority);
-int semcreateReal(int value);
 int waitReal(int*);
 int spawnLaunch();
 
+/* ---------- Other Prototypes ---------- */
+int semcreateReal(int value);
+
 /* ------------------------- Globals ------------------------- */
 p3proc ProcTable[MAXPROC];
+int SemTable[MAXSEMS];
+int MboxTable[MAXSEMS];
 int debugFlag = 0;
 int currentPID = 4;
+int currentSems = 0;
 
 int start2(char *arg)
 {
     int pid;
     int status;
+
+    for (int i = 0; i < MAXSEMS; i++){
+        SemTable[i] = -1;
+    }
     /*
      * Check kernel mode here.
      */
@@ -47,6 +60,9 @@ int start2(char *arg)
     systemCallVec[SYS_SPAWN]        = spawn;
     systemCallVec[SYS_WAIT]         = wait2;
     systemCallVec[SYS_TERMINATE]    = terminate;
+    systemCallVec[SYS_SEMCREATE]    = semcreate;
+    systemCallVec[SYS_SEMP]         = semP;
+    systemCallVec[SYS_SEMV]         = semV;
 
     /*
      * Create first user-level process and wait for it to finish.
@@ -267,16 +283,112 @@ void terminateReal()
     }
 } /* terminateReal */
 
+/* semcreate--------------------------------------------------------------
+   Name - semcreate
+   Purpose - to check the input from our syscall and then call screateReal
+   Parameters - systemArgs
+   Returns - void 
+   -------------------------------------------------------------------- */
 void semcreate(systemArgs * args)
 {
+    if (debugFlag){
+        printf("semcreate():\n");
+    } 
+    if (args->arg1 < 0){
+        args->arg4 = -1;
+        return;
+    }
+    if (currentSems >= MAXSEMS){
+        args->arg4 = -1;
+        return;
+    }
 
-}
+    args->arg1 = (void *)semcreateReal((int)args->arg1);
+    currentSems++;
+    args->arg4 = 0;
+} /* semcreate */
 
+/* semcreateReal----------------------------------------------------------
+   Name - semcreateReal
+   Purpose - takes in an int value and if there is a handle available it
+                will assign that value to that handle.
+   Parameters - value
+   Returns - an int handle 
+   -------------------------------------------------------------------- */
 int semcreateReal(int value)
 {
-  
-}
+    int counter = MAXSEMS;
+    while (SemTable[currentSems%MAXSEMS] != -1 || counter--){
+        SemTable[currentSems%MAXSEMS] = value;
+        MboxTable[currentSems%MAXSEMS] = MboxCreate(0, 0);
+        break;
+    }
+    return currentSems;
+} /* semcreateReal */
 
+/* semP-------------------------------------------------------------------
+   Name - semP
+   Purpose - to check if the given handle is valid and if it is call
+                semPReal
+   Parameters - systemArgs
+   Returns - void 
+   -------------------------------------------------------------------- */
+void semP(systemArgs * args)
+{
+    if (debugFlag){
+        printf("semP():\n");
+    }
+
+    int handle = (int)args->arg1;
+    if (SemTable[handle] == -1){
+        args->arg4 = (void *) -1;
+    }
+
+    semPReal(handle);
+    args->arg4 = 0;
+} /* semP */
+
+/* semPReal---------------------------------------------------------------
+   Name - semPReal
+   Purpose - if the semaphore is positive then it decrements it. Else it 
+                will block until it is positive and then decrement it.
+   Parameters - semaphore handle
+   Returns - void 
+   -------------------------------------------------------------------- */
+void semPReal(int handle)
+{
+    if (SemTable[handle] > 0){
+        SemTable[handle]--;
+    }
+    else {
+        // Block ourselves here
+        while(SemTable[handle] <= 0){
+            MboxReceive(MboxTable[handle], NULL, 0);
+        }
+        SemTable[handle]--;
+    }
+} /* semPReal */
+
+void semV(systemArgs * args)
+{
+    if (debugFlag){
+        printf("semV():\n");
+    }
+
+    int handle = (int)args->arg1;
+    if (SemTable[handle] == -1){
+        args->arg4 = (void *) -1;
+    }
+
+    semVReal(handle);
+    args->arg4 = 0;
+} /* semV */
+
+void semVReal(int handle)
+{
+    SemTable[handle]++;
+    MboxCondSend(MboxTable[handle], NULL, 0);
+}
 
 
 

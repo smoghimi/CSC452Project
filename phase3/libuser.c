@@ -12,6 +12,7 @@
 #include <phase2.h>
 #include <phase3.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <libuser.h>
 
 #define CHECKMODE {    \
@@ -127,7 +128,7 @@ int SemCreate(int value, int *semaphore)
 
     USLOSS_Syscall(&sysArg);
 
-    semaphore = (int) sysArg.arg1;
+    *semaphore = sysArg.arg1;
     return (int) sysArg.arg4;
 } /* end of SemCreate */
 
@@ -142,7 +143,15 @@ int SemCreate(int value, int *semaphore)
  */
 int SemP(int semaphore)
 {
-    int something = 0;
+    USLOSS_Sysargs sysArg;
+
+    CHECKMODE;
+    sysArg.number = SYS_SEMP;
+    sysArg.arg1 = (void *) semaphore;
+
+    USLOSS_Syscall(&sysArg);
+
+    int something = (int) sysArg.arg4;
     return something;
 } /* end of SemP */
 
@@ -157,7 +166,15 @@ int SemP(int semaphore)
  */
 int SemV(int semaphore)
 {
-    int something = 0;
+    USLOSS_Sysargs sysArg;
+
+    CHECKMODE;
+    sysArg.number = SYS_SEMV;
+    sysArg.arg1 = (void *) semaphore;
+
+    USLOSS_Syscall(&sysArg);
+
+    int something = (int) sysArg.arg4;
     return something;
 } /* end of SemV */
 

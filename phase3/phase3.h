@@ -8,6 +8,7 @@
 #define MAXSEMS         200
 
 typedef struct p3proc * procPtr;
+typedef struct sem * semPtr;
 
 typedef struct p3proc {
 	int 		pid;
@@ -16,7 +17,13 @@ typedef struct p3proc {
 	char * 		arg;	
 	procPtr		child;
 	procPtr 	nextSibling;
+	procPtr 	nextSemBlocked;
 } p3proc;
+
+typedef struct sem {
+	int			licenses;
+	procPtr		blockList;
+} sem;
 
 #endif /* _PHASE3_H */
 
