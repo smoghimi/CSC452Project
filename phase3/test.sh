@@ -20,7 +20,7 @@ do
 done
 
 
-for VAR in {10..10}
+for VAR in {13..16}
 do
 	make test"$VAR" > temp.out
 	./test"$VAR" | grep -v '^ ' | grep -v '^PID' > myTests/myTest"$VAR".out
