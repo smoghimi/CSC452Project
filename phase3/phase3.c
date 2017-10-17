@@ -360,6 +360,9 @@ void semPReal(int handle)
             BlockedSems[handle]++;
             MboxReceive(MboxTable[handle], NULL, 0);
             BlockedSems[handle]--;
+            if(SemTable[handle] < 0){
+                quit(0);
+            }
         }
         SemTable[handle]--;
     }
@@ -415,13 +418,10 @@ void semFree(systemArgs * args)
         args->arg4 = (void *) -1;
         return;
     }
-    if (BlockedSems[handle] == 0){
+    else {
         semCount--;
         args->arg4 = (void *) 0;
         semFreeReal(handle);
-    }
-    else {
-        //deal with the case where we have blocked process on our sem.
     }
     setToUserMode();
 } /* semFree */
@@ -434,8 +434,10 @@ void semFree(systemArgs * args)
    -------------------------------------------------------------------- */
 void semFreeReal(int handle)
 {
-
     SemTable[handle] = -1;
+    while (BlockedSems[handle] > 0){
+        MboxCondSend(MboxTable[handle], NULL, 0);
+    }
 } /* semFreeReal */
 
 /* getpid2----------------------------------------------------------------
