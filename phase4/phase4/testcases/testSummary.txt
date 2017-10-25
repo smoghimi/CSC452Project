@@ -1,0 +1,26 @@
+Test cases that use TermRead, TermWrite, Clock, Disk
+
+test00.c               Clock
+test01.c               Clock
+test02.c               Clock
+test03.c  Read
+test04.c  Read  Write
+test05.c  Read
+test06.c  Read  Write
+test07.c        Write
+test08.c  Read
+test09.c                        Disk
+test10.c                        Disk
+test11.c                        Disk
+test12.c                        Disk
+test13.c                        Disk
+test14.c                        Disk
+test15.c                        Disk
+test16.c                        Disk
+test17.c                        Disk
+test18.c                        Disk
+test19.c  Read  Write
+test20.c  Read  Write
+test21.c  Read  Write
+test22.c  Read  Write
+test23.c  Read  Write  Clock    Disk

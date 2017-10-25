@@ -1,0 +1,3 @@
+start4(): Attempt to write to a non-existant disk, disk 3
+start4(): done
+All processes completed.
