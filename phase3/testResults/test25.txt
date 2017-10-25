@@ -1,0 +1,69 @@
+start3(): started
+start3(): spawned process 5
+
+Child1(): starting, pid = 5
+
+Child2(): starting, pid = 6
+Child2(): spawned process 7
+Child2(): spawned process 8
+Child2(): spawned process 9
+Child2(): spawned process 10
+Child2(): spawned process 11
+Child2(): spawned process 12
+Child2(): spawned process 13
+Child2(): spawned process 14
+Child2(): spawned process 15
+Child2(): spawned process 16
+Child2(): spawned process 17
+Child2(): spawned process 18
+Child2(): spawned process 19
+Child2(): spawned process 20
+Child2(): spawned process 21
+Child2(): spawned process 22
+Child2(): spawned process 23
+Child2(): spawned process 24
+Child2(): spawned process 25
+Child2(): spawned process 26
+Child2(): spawned process 27
+Child2(): spawned process 28
+Child2(): spawned process 29
+Child2(): spawned process 30
+Child2(): spawned process 31
+Child2(): spawned process 32
+Child2(): spawned process 33
+Child2(): spawned process 34
+Child2(): spawned process 35
+Child2(): spawned process 36
+Child2(): spawned process 37
+Child2(): spawned process 38
+Child2(): spawned process 39
+Child2(): spawned process 40
+Child2(): spawned process 41
+Child2(): spawned process 42
+Child2(): spawned process 43
+Child2(): spawned process 44
+Child2(): spawned process 45
+Child2(): spawned process 46
+Child2(): spawned process 47
+Child2(): spawned process 48
+Child2(): spawned process 49
+Child2(): spawned process 50
+Child2(): spawned attempt failed, pid = -1
+Child2(): spawned attempt failed, pid = -1
+Child2(): spawned attempt failed, pid = -1
+Child2(): spawned attempt failed, pid = -1
+Child2(): spawned attempt failed, pid = -1
+Child2(): spawned attempt failed, pid = -1
+
+Child2(): Terminating self and all my children
+Child1(): spawned process 6
+
+Child2b(): starting, pid = 56
+Child2c(): starting the code for Child2c
+Child2b(): spawned process 57
+Child1(): spawned process 56
+Child1(): child 56 returned status of 50
+Child1(): done
+start3(): child 5 returned status of 9
+start3(): done
+All processes completed.

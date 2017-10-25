@@ -1,0 +1,29 @@
+start3(): started
+start3(): SemCreate returned 0
+start3(): After P in the CS
+
+Child1(): starting
+Child1(): After P attempt #0
+Child1(): After P attempt #1
+
+start3(): spawn 5
+start3(): spawn 6
+Child1(): After P attempt #2
+
+Child2(): starting
+
+start3(): After V -- may appear before: Child1(): After P attempt #3
+Child1(): After P attempt #3 -- may appear before: start3(): After V
+Child2(): After V attempt #0
+Child1(): After P attempt #4
+Child1(): done
+Child2(): After V attempt #1
+Child2(): After V attempt #2
+Child2(): After V attempt #3
+Child2(): After V attempt #4
+Child2(): done
+
+start3(): status of quit child = 9
+start3(): status of quit child = 10
+start3(): Parent done
+All processes completed.

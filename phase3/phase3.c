@@ -42,13 +42,14 @@ int spawnLaunch();
 int semcreateReal(int value);
 
 /* ------------------------- Globals ------------------------- */
+int ProcMboxTable[MAXPROC];
 p3proc ProcTable[MAXPROC];
-int SemTable[MAXSEMS];
-int MboxTable[MAXSEMS];
+int SemMboxTable[MAXSEMS];
 int BlockedSems[MAXSEMS];
-int debugFlag = 0;
-int currentPID = 4;
+int SemTable[MAXSEMS];
 int currentSems = 0;
+int currentPID = 4;
+int debugFlag = 0;
 int semCount = 0;
 
 int start2(char *arg)
@@ -56,9 +57,14 @@ int start2(char *arg)
     int pid;
     int status;
 
+    for (int i = 0; i < MAXPROC; i++){
+        ProcMboxTable[i] = MboxCreate(0, 0);
+    }
     for (int i = 0; i < MAXSEMS; i++){
         SemTable[i] = -1;
+        BlockedSems[i] = 0;
     }
+    printf("%i\n", USLOSS_PsrGet() & USLOSS_PSR_CURRENT_MODE);
     /*
      * Check kernel mode here.
      */
@@ -143,16 +149,20 @@ void spawn(systemArgs * args)
     }
     int pid = spawnReal(args->arg5, args->arg1, args->arg2, (int)args->arg3, (int)args->arg4);
 
-    if (ProcTable[INDEX].children == 1) {
-        ProcTable[INDEX].child = &ProcTable[pid%MAXPROC];
-    }
-    else {
-        procPtr temp = ProcTable[INDEX].child;
-        while(temp->nextSibling != NULL){
-            temp = temp->nextSibling;
+    if (pid >= 0){
+        if (ProcTable[INDEX].children == 1) {
+            ProcTable[INDEX].child = &ProcTable[pid%MAXPROC];
+        }
+        else {
+            procPtr temp = ProcTable[INDEX].child;
+            while(temp->nextSibling != NULL){
+                temp = temp->nextSibling;
+            }
+            temp->nextSibling = &ProcTable[pid%MAXPROC];
         }
     }
-    args->arg1 = (void *) pid;
+
+    args->arg1 = (void *)(long) pid;
     setToUserMode();
 } /* spawn */
 
@@ -175,11 +185,12 @@ int spawnReal(char * name, int(*startFunc)(char *), char * arg, int stacksize, i
         printf("%s - %s - %i - %i\n", name, arg, stacksize, priority);
     }
     ProcTable[INDEX].children++;
-    ProcTable[currentPID%MAXPROC].startFunc = startFunc;
-    ProcTable[currentPID%MAXPROC].arg = arg;
-    ProcTable[currentPID%MAXPROC].pid = currentPID;
-    currentPID++;
+
     int a = fork1(name, spawnLaunch, arg, stacksize, priority);
+    ProcTable[a%MAXPROC].startFunc = startFunc;
+    ProcTable[a%MAXPROC].arg = arg;
+    ProcTable[a%MAXPROC].pid = a;
+    MboxCondSend(ProcMboxTable[a%MAXPROC], NULL, 0);
     return a;
 } /* spawnReal */
 
@@ -191,13 +202,25 @@ int spawnReal(char * name, int(*startFunc)(char *), char * arg, int stacksize, i
    -------------------------------------------------------------------- */
 int spawnLaunch()
 {
+    // If we haven't set a startFunc, then we should block on our own
+    // private mailbox until someone else sets it for us.
+    if (ProcTable[INDEX].startFunc == NULL){
+        MboxReceive(ProcMboxTable[INDEX], NULL, 0);
+    }
+    if (isZapped()){
+        ProcTable[INDEX].status = -1;
+        quit(0);
+    }
+
     unsigned int a = USLOSS_PsrGet();
     a ^= USLOSS_PSR_CURRENT_MODE;
     a = USLOSS_PsrSet(a);
-    int index = getpid() % MAXPROC;
+
+
     int returnValue;
-    returnValue = ProcTable[index].startFunc(ProcTable[index].arg);
+    returnValue = ProcTable[INDEX].startFunc(ProcTable[INDEX].arg);
     setToKernelMode();
+    ProcTable[INDEX].status = -1;
     quit(0);
     return returnValue;
 } /* spawnLaunch */
@@ -211,15 +234,18 @@ int spawnLaunch()
    -------------------------------------------------------------------- */
 void wait2(systemArgs * args)
 {
+    if (debugFlag){
+        printf("wait2():\n");
+    }
     int status;
-    args->arg1 = (void *) waitReal(&status);
+    args->arg1 = (void *)(long) waitReal(&status);
     if(args->arg1 > 0){
         args->arg4 = 0;
     } 
     else {
         args->arg4 = (void *) -1;
     }
-    args->arg2 = (void *) status;
+    args->arg2 = (void *)(long) status;
     setToUserMode();
 } /* wait */
 
@@ -232,6 +258,9 @@ void wait2(systemArgs * args)
    ------------------------------------------------------------------------ */
 int waitReal(int* status)
 {
+    if (debugFlag){
+        printf("waitReal():\n");
+    }
     int result;
     result = join(status);
     return result;
@@ -245,7 +274,12 @@ int waitReal(int* status)
    -------------------------------------------------------------------- */
 void terminate(systemArgs * args)
 {
+    if (debugFlag){
+        printf("terminate():\n");
+    }
     terminateReal();
+    ProcTable[INDEX].status = -1;
+    ProcTable[INDEX].startFunc = NULL;
     setToUserMode();
     quit((int)args->arg1);
 } /* terminate */
@@ -260,12 +294,26 @@ void terminate(systemArgs * args)
    -------------------------------------------------------------------- */
 void terminateReal()
 {
+    if (debugFlag){
+        printf("terminateReal(): %i\n", getpid());
+    }
     int status;
     int result;
-    procPtr temp = ProcTable[getpid() % MAXPROC].child;
-    while (temp != NULL && temp->nextSibling != NULL){
-        zap(temp->pid);
+    procPtr temp = ProcTable[INDEX].child;
+    if (temp != NULL && temp->status >= 0){
+        while (temp != NULL && temp->nextSibling != NULL){
+            if (temp->status >= 0){
+                zap(temp->pid);
+                (temp->startFunc = NULL);
+            }
+            temp = temp->nextSibling;
+        }
+        if (temp != NULL){
+            if (temp->status >= 0)
+                zap(temp->pid);
+        } 
     }
+    
     result = waitReal(&status);
     while(result > 0){
         result = waitReal(&status);
@@ -284,7 +332,7 @@ void semcreate(systemArgs * args)
         printf("semcreate():\n");
     } 
     if (args->arg1 < 0){
-        args->arg4 = -1;
+        args->arg4 = (void *) -1;
         setToUserMode();
         return;
     }
@@ -294,7 +342,7 @@ void semcreate(systemArgs * args)
         return;
     }
 
-    args->arg1 = (void *)semcreateReal((int)args->arg1);
+    args->arg1 = (void *)(long) semcreateReal((int)args->arg1);
     if ((int)args->arg1 == -3){
         args->arg4 = (void *) -1;
     } else {
@@ -313,6 +361,9 @@ void semcreate(systemArgs * args)
    -------------------------------------------------------------------- */
 int semcreateReal(int value)
 {
+    if (debugFlag){
+        printf("semcreateReal()\n");
+    }
     int counter = MAXSEMS+1;
     while (SemTable[currentSems%MAXSEMS] != -1 && counter--){
         currentSems++;
@@ -321,7 +372,7 @@ int semcreateReal(int value)
         return -3;
     }
     SemTable[currentSems%MAXSEMS] = value;
-    MboxTable[currentSems%MAXSEMS] = MboxCreate(0, 0);
+    SemMboxTable[currentSems%MAXSEMS] = MboxCreate(0, 0);
     return currentSems;
 } /* semcreateReal */
 
@@ -357,6 +408,9 @@ void semP(systemArgs * args)
    -------------------------------------------------------------------- */
 void semPReal(int handle)
 {
+    if (debugFlag){
+        printf("semPReal():\n");
+    }
     if (SemTable[handle] > 0){
         SemTable[handle]--;
     }
@@ -364,10 +418,11 @@ void semPReal(int handle)
         // Block ourselves here
         while(SemTable[handle] <= 0){
             BlockedSems[handle]++;
-            MboxReceive(MboxTable[handle], NULL, 0);
+            MboxReceive(SemMboxTable[handle], NULL, 0);
             BlockedSems[handle]--;
             if(SemTable[handle] < 0){
-                quit(0);
+                ProcTable[INDEX].status = -1;
+                quit(1);
             }
         }
         SemTable[handle]--;
@@ -407,7 +462,7 @@ void semV(systemArgs * args)
 void semVReal(int handle)
 {
     SemTable[handle]++;
-    MboxCondSend(MboxTable[handle], NULL, 0);
+    MboxCondSend(SemMboxTable[handle], NULL, 0);
 } /* semVReal */
 
 /* semFree----------------------------------------------------------------
@@ -424,9 +479,14 @@ void semFree(systemArgs * args)
         args->arg4 = (void *) -1;
         return;
     }
-    else {
+    else if (BlockedSems[handle] == 0){
         semCount--;
         args->arg4 = (void *) 0;
+        semFreeReal(handle);
+    }
+    else {
+        semCount--;
+        args->arg4 = (void *) 1;
         semFreeReal(handle);
     }
     setToUserMode();
@@ -442,7 +502,7 @@ void semFreeReal(int handle)
 {
     SemTable[handle] = -1;
     while (BlockedSems[handle] > 0){
-        MboxCondSend(MboxTable[handle], NULL, 0);
+        MboxCondSend(SemMboxTable[handle], NULL, 0);
     }
 } /* semFreeReal */
 
@@ -454,7 +514,7 @@ void semFreeReal(int handle)
    -------------------------------------------------------------------- */
 void getpid2(systemArgs * args)
 {
-    args->arg1 = getpid();
+    args->arg1 = (void*)(long)getpid();
     setToUserMode();
 } /* getpid2 */
 
@@ -490,7 +550,7 @@ void setToKernelMode(){
    -------------------------------------------------------------------- */
 void gettimeofday(systemArgs * args)
 {
-    args->arg1 = (void *) gettimeofdayReal();
+    args->arg1 = (void *)(long) gettimeofdayReal();
     setToUserMode();
 } /* gettimeofday */
 
@@ -515,7 +575,7 @@ int gettimeofdayReal()
    -------------------------------------------------------------------- */
 void cputime(systemArgs * args)
 {
-    args->arg1 = (void *) cputimeReal();
+    args->arg1 = (void *)(long) cputimeReal();
     setToUserMode();
 } /* cputime */
 
@@ -526,7 +586,9 @@ void cputime(systemArgs * args)
    Returns - current time of the current process
    -------------------------------------------------------------------- */
 int cputimeReal()
-{
+{   
+    // Want to be able to fold my function so
+    // im adding extra lines via comments
     return readtime();
 } /* cputimeReal */
 

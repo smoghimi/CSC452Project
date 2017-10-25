@@ -1,0 +1,17 @@
+start3(): started
+start3(): spawned process 5
+
+Child1(): starting, pid = 5
+
+Child2(): starting, pid = 6
+Child2(): spawned process 7
+Child2(): spawned process 8
+Child2(): terminating
+
+Child1(): spawned process 6
+Child1(): child 6 returned status of 10
+Child1(): done
+
+start3(): child 5 returned status of 9
+start3(): done
+All processes completed.

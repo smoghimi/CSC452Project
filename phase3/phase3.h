@@ -12,6 +12,7 @@ typedef struct sem * semPtr;
 
 typedef struct p3proc {
 	int 		pid;
+	int 		status;
 	int 		children;
 	int 		(* startFunc) (char *);
 	char * 		arg;	

@@ -20,7 +20,21 @@ do
 done
 
 
-for VAR in {13..16}
+for VAR in {13..18}
+do
+	make test"$VAR" > temp.out
+	./test"$VAR" | grep -v '^ ' | grep -v '^PID' > myTests/myTest"$VAR".out
+	cat testResults/test"$VAR".txt | grep -v '^ ' | grep -v '^PID' > myTests/test"$VAR".out
+	diff myTests/myTest"$VAR".out myTests/test"$VAR".out
+	ret=$?
+	if [ $ret -eq 0 ]; then
+		echo "${GREEN}PASSED test$VAR${NC}"
+	else
+		echo "${RED}--FAILED test$VAR--${NC}"
+	fi
+done
+
+for VAR in {21..25}
 do
 	make test"$VAR" > temp.out
 	./test"$VAR" | grep -v '^ ' | grep -v '^PID' > myTests/myTest"$VAR".out
