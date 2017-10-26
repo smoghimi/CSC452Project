@@ -7,16 +7,20 @@
 #include <phase4.h>
 #include <stdlib.h>
 
-int  semRunning;
-
+/* ---------- Prototypes ---------- */
 static int	ClockDriver(char *);
 static int	DiskDriver(char *);
 
-void
-start3(void)
+void Sleep(int seconds);
+
+/* ---------- Globals ---------- */
+int  semRunning;
+
+
+void start3(void)
 {
     char	name[128];
-    char        buf[10];
+    char    buf[10];
     int		i;
     int		clockPID;
     int		pid;
@@ -81,12 +85,16 @@ start3(void)
     zap(clockPID);  // clock driver
 
     // eventually, at the end:
-    quit(0);
-    
+    quit(0);   
 }
 
-static int
-ClockDriver(char *arg)
+/* ClockDriver -----------------------------------------------------------
+   Purpose : ClockDriver's purpose is to essentially allow programs to 
+                processes to have a delay
+ Arguments : Takes a char as input
+   Returns : an int.
+ * ---------------------------------------------------------------------*/
+static int ClockDriver(char *arg)
 {
     int result;
     int status;
@@ -106,10 +114,27 @@ ClockDriver(char *arg)
 	 * whose time has come.
 	 */
     }
-}
+} /* ClockDriver */
 
-static int
-DiskDriver(char *arg)
+/* Sleep -----------------------------------------------------------------
+   Purpose : Sleep's purpose is to be the function that a program calls
+                when it wants to be delayed for some reason.
+ Arguments : Takes an int as the number of seconds that it wants to sleep
+   Returns : void
+ * ---------------------------------------------------------------------*/
+void Sleep(int seconds)
+{
+    // mark our status as being asleep in the proctable.
+    // Calculate the time from now + seconds
+    // addourself to the Queue.
+} /* Sleep */
+
+/* DiskDriver ------------------------------------------------------------
+   Purpose : Not sure yet
+ Arguments : Takes a char as input
+   Returns : an int.
+ * ---------------------------------------------------------------------*/
+static int DiskDriver(char *arg)
 {
     return 0;
-}
+} /* DiskDriver */
