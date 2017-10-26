@@ -11,8 +11,6 @@
 static int	ClockDriver(char *);
 static int	DiskDriver(char *);
 
-void Sleep(int seconds);
-
 /* ---------- Globals ---------- */
 int  semRunning;
 
@@ -105,15 +103,16 @@ static int ClockDriver(char *arg)
 
     // Infinite loop until we are zap'd
     while(! isZapped()) {
-	result = waitDevice(USLOSS_CLOCK_DEV, 0, &status);
-	if (result != 0) {
-	    return 0;
-	}
+	   result = waitDevice(USLOSS_CLOCK_DEV, 0, &status);
+	   if (result != 0) {
+	       return 0;
+	   }
 	/*
 	 * Compute the current time and wake up any processes
 	 * whose time has come.
 	 */
     }
+    return 0;
 } /* ClockDriver */
 
 /* Sleep -----------------------------------------------------------------
@@ -122,11 +121,12 @@ static int ClockDriver(char *arg)
  Arguments : Takes an int as the number of seconds that it wants to sleep
    Returns : void
  * ---------------------------------------------------------------------*/
-void Sleep(int seconds)
+int Sleep(int seconds)
 {
     // mark our status as being asleep in the proctable.
     // Calculate the time from now + seconds
     // addourself to the Queue.
+    return 0;
 } /* Sleep */
 
 /* DiskDriver ------------------------------------------------------------
