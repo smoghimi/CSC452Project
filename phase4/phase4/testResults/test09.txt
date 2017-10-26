@@ -1,5 +1,0 @@
-start4(): started
-start4(): unit 0, sector size 512, track size 16, disk size 16
-start4(): unit 1, sector size 512, track size 16, disk size 32
-start4(): calling Terminate
-All processes completed.

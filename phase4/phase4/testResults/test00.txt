@@ -1,6 +1,0 @@
-start4(): started
-          going to sleep for 5 seconds.
-start4(): Sleep starts at  40552
-start4(): Sleep done at  5090037
-start4(): done.
-All processes completed.
