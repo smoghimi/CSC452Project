@@ -1,0 +1,23 @@
+start4(): disk scheduling test, create 6 processes that write
+          3 to disk0         
+          3 to disk1         
+ubiq0: going to write to track 5
+ubiq0: going to write to track 3
+ubiq0: going to write to track 9
+ubiq1: going to write to track 4
+ubiq1: going to write to track 2
+ubiq1: going to write to track 8
+ubiq0: after writing to track 5
+process 21 quit with status 2
+ubiq1: after writing to track 4
+process 24 quit with status 5
+ubiq0: after writing to track 9
+process 23 quit with status 4
+ubiq1: after writing to track 8
+process 26 quit with status 7
+ubiq0: after writing to track 3
+process 22 quit with status 3
+ubiq1: after writing to track 2
+process 25 quit with status 6
+start4(): done 31
+All processes completed.

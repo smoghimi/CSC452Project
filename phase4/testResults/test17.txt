@@ -1,0 +1,29 @@
+start4(): disk scheduling test, 8 children
+          algorithm test           
+	      same track different sectors
+going to write to sector 5
+going to write to sector 3
+going to write to sector 9
+going to write to sector 0
+going to write to sector 7
+going to write to sector 2
+going to write to sector 1
+going to write to sector 6
+after writing to sector 5
+process 21 quit with status 2
+after writing to sector 3
+process 22 quit with status 3
+after writing to sector 9
+process 23 quit with status 4
+after writing to sector 0
+process 24 quit with status 5
+after writing to sector 7
+process 25 quit with status 6
+after writing to sector 2
+process 26 quit with status 7
+after writing to sector 1
+process 27 quit with status 8
+after writing to sector 6
+process 28 quit with status 9
+start4(): done 33
+All processes completed.
