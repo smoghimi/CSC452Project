@@ -1,0 +1,8 @@
+start4(): Writing data to 3 disk sectors, then reading them back
+          Confirm that data read back matches data read in
+start4(): Testing Disk 0
+start4(): Test of disk 0 succeeded.
+start4(): Testing Disk 1
+start4(): Test of disk 1 succeeded.
+start4(): Done.
+All processes completed.

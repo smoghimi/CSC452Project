@@ -1,0 +1,16 @@
+start4(): Testing disk 0
+start4(): Read from disk: This is a test
+
+start4(): Read from disk: Does it work?
+
+start4(): Read from disk: One last chance
+
+start4(): Testing disk 1
+start4(): Read from disk: This is a test
+
+start4(): Read from disk: Does it work?
+
+start4(): Read from disk: One last chance
+
+start4(): Terminating
+All processes completed.
