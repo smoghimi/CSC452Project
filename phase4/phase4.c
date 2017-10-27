@@ -7,12 +7,18 @@
 #include <phase4.h>
 #include <stdlib.h>
 
+#define INDEX getpid()%MAXPROC
+
 /* ---------- Prototypes ---------- */
 static int	ClockDriver(char *);
 static int	DiskDriver(char *);
 
 /* ---------- Globals ---------- */
-int  semRunning;
+p4proc      ProcTable[MAXPROC];
+procQ       SleepQueue;
+qPtr        head = &SleepQueue;
+int         semRunning;
+int         dFlag = 1;
 
 
 void start3(void)
@@ -26,6 +32,11 @@ void start3(void)
     /*
      * Check kernel mode here.
      */
+    int a = USLOSS_PsrGet() & USLOSS_PSR_CURRENT_MODE;
+    if (!a) {
+        printf("start3(): Not in kernel mode. Halting...\n");
+        USLOSS_Halt(1);
+    }
 
     /*
      * Create clock device driver 
@@ -111,6 +122,7 @@ static int ClockDriver(char *arg)
 	 * Compute the current time and wake up any processes
 	 * whose time has come.
 	 */
+
     }
     return 0;
 } /* ClockDriver */
@@ -123,9 +135,45 @@ static int ClockDriver(char *arg)
  * ---------------------------------------------------------------------*/
 int Sleep(int seconds)
 {
-    // mark our status as being asleep in the proctable.
+    if (dFlag){
+        printf("Sleep(): process %i calling sleep.\n", getpid());
+        printf("\t we are in mode:%i\n", USLOSS_PsrGet() & USLOSS_PSR_CURRENT_MODE);
+    }
+
+    // mark our status as being asleep in the proctable
+    ProcTable[INDEX].status = ASLEEP;
+
     // Calculate the time from now + seconds
-    // addourself to the Queue.
+    int time;
+    CPUTime(&time);
+    int wakeUpTime = time + (seconds * 1000000);
+
+    // add ourself to the Queue
+    // if no one is in the Q yet
+    if (head->process == 0){
+        head->process = getpid();
+        head->wakeUpTime = wakeUpTime;
+    } // else if there are others in the q we must arrange them by wake-up-time
+    else {
+        if (wakeUpTime < head->wakeUpTime){
+            procQ temp;
+            temp.process = getpid();
+            temp.wakeUpTime = wakeUpTime;
+            temp.next = head;
+        }
+        else {
+            qPtr iter = head;
+            while (iter->next != NULL && wakeUpTime > iter->next->wakeUpTime){
+                iter = iter->next;
+            }
+            procQ temp;
+            temp.process = getpid();
+            temp.wakeUpTime = wakeUpTime;
+            temp.next = iter->next;
+            iter->next = &temp;
+        }
+    }
+
     return 0;
 } /* Sleep */
 

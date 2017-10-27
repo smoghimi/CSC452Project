@@ -5,11 +5,25 @@
 #ifndef _PHASE4_H
 #define _PHASE4_H
 
-/*
- * Maximum line length
- */
-
+//Maximum line length
 #define MAXLINE         80
+
+//Sleeping status
+#define ASLEEP 			-10
+
+typedef struct p4proc * procPtr;
+typedef struct procQ  * qPtr;
+
+typedef struct p4proc {
+	int 		status;
+	int 		pid;
+} p4proc;
+
+typedef struct procQ {
+	int 		process;
+	qPtr 		next;
+	int 		wakeUpTime;
+} procQ;
 
 /*
  * Function prototypes for this phase.
