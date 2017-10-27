@@ -17,6 +17,7 @@ typedef struct procQ  * qPtr;
 typedef struct p4proc {
 	int 		status;
 	int 		pid;
+	int 		pSem;
 } p4proc;
 
 typedef struct procQ {

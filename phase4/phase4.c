@@ -18,7 +18,7 @@ p4proc      ProcTable[MAXPROC];
 procQ       SleepQueue;
 qPtr        head = &SleepQueue;
 int         semRunning;
-int         dFlag = 1;
+int         dFlag = 0;
 
 
 void start3(void)
@@ -36,6 +36,10 @@ void start3(void)
     if (!a) {
         printf("start3(): Not in kernel mode. Halting...\n");
         USLOSS_Halt(1);
+    }
+
+    for (int i = 0; i < MAXPROC; i++){
+        ProcTable[i].pSem = semcreateReal(0);
     }
 
     /*
@@ -105,6 +109,9 @@ void start3(void)
  * ---------------------------------------------------------------------*/
 static int ClockDriver(char *arg)
 {
+    if (dFlag){
+        printf("ClockDriver(): \n");
+    }
     int result;
     int status;
 
@@ -114,16 +121,34 @@ static int ClockDriver(char *arg)
 
     // Infinite loop until we are zap'd
     while(! isZapped()) {
-	   result = waitDevice(USLOSS_CLOCK_DEV, 0, &status);
-	   if (result != 0) {
-	       return 0;
-	   }
+        result = waitDevice(USLOSS_CLOCK_DEV, 0, &status);
+        int time;
+        while (1){
+            gettimeofdayReal(&time);
+            waitDevice(USLOSS_CLOCK_DEV, 0, &status);
+
+            while (time > head->wakeUpTime && head->process > 0){
+                head->wakeUpTime = 0;
+                semvReal(ProcTable[head->process%MAXPROC].pSem);
+                head->process = -1;
+                if (head->next != NULL)
+                    head = head->next;
+            }
+            if (head->process <= 0){
+                break;
+            }
+        }
+        result = waitDevice(USLOSS_CLOCK_DEV, 0, &status);
+        if (result != 0){
+            return 0;
+        }
 	/*
 	 * Compute the current time and wake up any processes
 	 * whose time has come.
 	 */
 
     }
+    printf("last return\n");
     return 0;
 } /* ClockDriver */
 
@@ -145,12 +170,12 @@ int Sleep(int seconds)
 
     // Calculate the time from now + seconds
     int time;
-    CPUTime(&time);
+    GetTimeofDay(&time);
     int wakeUpTime = time + (seconds * 1000000);
 
     // add ourself to the Queue
     // if no one is in the Q yet
-    if (head->process == 0){
+    if (head->process <= 0){
         head->process = getpid();
         head->wakeUpTime = wakeUpTime;
     } // else if there are others in the q we must arrange them by wake-up-time
@@ -173,6 +198,7 @@ int Sleep(int seconds)
             iter->next = &temp;
         }
     }
+    SemP(ProcTable[INDEX].pSem);
 
     return 0;
 } /* Sleep */
