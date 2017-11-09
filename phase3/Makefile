@@ -8,10 +8,10 @@ AR = ar
 COBJS = phase3.o libuser.o
 CSRCS = ${COBJS:.o=.c}
 
-PHASE1LIB = patrickphase1
-PHASE2LIB = patrickphase2
-#PHASE1LIB = patrickphase1debug
-#PHASE2LIB = patrickphase2debug
+#PHASE1LIB = patrickphase1
+#PHASE2LIB = patrickphase2
+PHASE1LIB = patrickphase1debug
+PHASE2LIB = patrickphase2debug
 
 HDRS = sems.h
 

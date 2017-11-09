@@ -1,0 +1,50 @@
+start4(): Spawning 5 children to sleep
+ChildS(0): Sleeping for 5 seconds
+ChildS(1): Sleeping for 4 seconds
+ChildS(2): Sleeping for 3 seconds
+ChildS(3): Sleeping for 2 seconds
+ChildS(4): Sleeping for 1 seconds
+start4(): Spawning 2 children to termfuncs
+ChildTR(): start
+start4(): Spawning 4 children to diskfuncs
+
+ChildDW0(): writing to disk 0, track 5, sector 0
+
+ChildDW1(): writing to disk 1, track 5, sector 0
+
+ChildR0(): reading from disk 0, track 5, sector 0
+
+ChildR1(): reading from disk 1, track 5, sector 0
+ChildDW0(): DiskWrite0 returned status = 0
+ChildDW1(): DiskWrite1 returned status = 0
+ChildR0(): DiskRead returned status = 0
+ChildR0(): disk_buf_B contains:
+ChildDW0(): A wonderful message to put on the disk...
+ChildR1(): DiskRead returned status = 0
+ChildR1(): disk_buf_B contains:
+ChildDW1(): A wonderful message to put on the disk...
+ChildS(4): After sleeping 1 seconds, diff in sys_clock is 1049299
+ChildTR(): terminal 0, read_length = 17
+ChildTR(): read from term0: read zero: first line
+ChildTR(): terminal 1, read_length = 16
+ChildTR(): read from term1: read one: first line
+ChildTR(): terminal 2, read_length = 16
+ChildTR(): read from term2: read two: first line
+ChildTR(): terminal 3, read_length = 18
+ChildTR(): read from term3: read three: first line
+ChildTR(): done
+ChildS(3): After sleeping 2 seconds, diff in sys_clock is 2049331
+ChildS(2): After sleeping 3 seconds, diff in sys_clock is 3049389
+ChildS(1): After sleeping 4 seconds, diff in sys_clock is 4049420
+ChildS(0): After sleeping 5 seconds, diff in sys_clock is 5049472
+start4(): done.
+All processes completed.
+
+term0.out
+ChildTW(): A Something interesting to print to term 0 ...
+term1.out
+ChildTW(): A Something interesting to print to term 1 ...
+term2.out
+ChildTW(): A Something interesting to print to term 2 ...
+term3.out
+ChildTW(): A Something interesting to print to term 3 ...

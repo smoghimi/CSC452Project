@@ -1,0 +1,24 @@
+start4(): Spawn four children.  Each child reads fm a different
+          terminal.  The child reading the shortest line will
+          finish first, etc.
+start4(): Spawn four children.  Each child writes to a different
+          terminal.
+Child0(): start
+Child1(): start
+Child2(): start
+Child3(): start
+Child1(): read one: first line
+Child2(): read two: first line
+Child0(): read zero: first line
+Child3(): read three: first line
+start4(): done.
+All processes completed.
+
+term0.out
+Child 0: A Something interesting to print here...
+term1.out
+Child 1: A Something interesting to print here...
+term2.out
+Child 2: A Something interesting to print here...
+term3.out
+Child 3: A Something interesting to print here...

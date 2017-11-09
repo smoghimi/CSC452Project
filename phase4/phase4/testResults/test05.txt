@@ -1,0 +1,5 @@
+start4(): Read from terminal 1, but ask for fewer
+          chars than are present on the first line.
+start4(): term1 read 13 bytes, first 13 bytes: `one: first li'
+start4(): simple terminal test is done.
+All processes completed.

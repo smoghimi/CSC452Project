@@ -1,0 +1,82 @@
+start4(): Spawn eight children.  
+          4 write 5 lines to a diff terminal.
+          4 read 5 lines to a diff terminal.
+Child0(): start
+Child_20(): start
+Child_20(): writing to term0
+Child1(): start
+Child_21(): start
+Child_21(): writing to term1
+Child2(): start
+Child_22(): start
+Child_22(): writing to term2
+Child3(): start
+Child_23(): start
+Child_23(): writing to term3
+Child1(): read one: first line
+Child2(): read two: first line
+Child0(): read zero: first line
+Child3(): read three: first line
+Child1(): read one: second line
+Child2(): read two: second line
+Child0(): read zero: second line
+Child3(): read three: second line
+Child_21(): writing to term1
+Child_20(): writing to term0
+Child_23(): writing to term3
+Child_22(): writing to term2
+Child1(): read one: third line, longer than previous ones
+Child2(): read two: third line, longer than previous ones
+Child0(): read zero: third line, longer than previous ones
+Child3(): read three: third line, longer than previous ones
+Child_21(): writing to term1
+Child_20(): writing to term0
+Child_23(): writing to term3
+Child_22(): writing to term2
+Child1(): read one: fourth line, will be 80 characters long when I get through typing it in..
+Child2(): read two: fourth line, will be 80 characters long when I get through typing it in..
+Child0(): read zero: fourth line, will be 80 characters long when I get through typing it in.
+Child3(): read three: fourth line, will be 80 characters long when I get through typing it in
+Child1(): read one: fifth line
+Child1(): done
+Child2(): read two: fifth line
+Child2(): done
+Child0(): read zero: fifth line
+Child0(): done
+Child3(): read three: fifth line
+Child3(): done
+Child_21(): writing to term1
+Child_20(): writing to term0
+Child_23(): writing to term3
+Child_22(): writing to term2
+Child_21(): writing to term1
+Child_20(): writing to term0
+Child_23(): writing to term3
+Child_22(): writing to term2
+start4(): done.
+All processes completed.
+
+term0.out
+Child 0: A Something interesting to print here... line 0 zero
+Child 0: A Something interesting to print here... line 1 zero
+Child 0: A Something interesting to print here... line 2 zero
+Child 0: A Something interesting to print here... line 3 zero
+Child 0: A Something interesting to print here... line 4 zero
+term1.out
+Child 1: A Something interesting to print here... line 0 one
+Child 1: A Something interesting to print here... line 1 one
+Child 1: A Something interesting to print here... line 2 one
+Child 1: A Something interesting to print here... line 3 one
+Child 1: A Something interesting to print here... line 4 one
+term2.out
+Child 2: A Something interesting to print here... line 0 second
+Child 2: A Something interesting to print here... line 1 second
+Child 2: A Something interesting to print here... line 2 second
+Child 2: A Something interesting to print here... line 3 second
+Child 2: A Something interesting to print here... line 4 second
+term3.out
+Child 3: A Something interesting to print here... line 0 three
+Child 3: A Something interesting to print here... line 1 three
+Child 3: A Something interesting to print here... line 2 three
+Child 3: A Something interesting to print here... line 3 three
+Child 3: A Something interesting to print here... line 4 three

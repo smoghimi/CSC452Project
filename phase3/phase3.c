@@ -14,8 +14,10 @@
 extern int start3(char*);
 
 /* ---------- Void Prototypes ---------- */
+void gettimeofday(systemArgs * args);
 void terminate(systemArgs * args);
 void semcreate(systemArgs * args);
+void cputime(systemArgs * args);
 void getpid2(systemArgs * args);
 void semFree(systemArgs * args);
 void spawn(systemArgs * args);
@@ -31,7 +33,9 @@ void setToUserMode();
 
 /* ---------- Int Prototypes ---------- */
 int spawnReal(char* name, int(*func)(char *), char*arg, int stacksize, int priority);
+int gettimeofdayReal();
 int waitReal(int*);
+int cputimeReal();
 int spawnLaunch();
 
 /* ---------- Other Prototypes ---------- */
@@ -70,6 +74,8 @@ int start2(char *arg)
     systemCallVec[SYS_SEMV]         = semV;
     systemCallVec[SYS_GETPID]       = getpid2;
     systemCallVec[SYS_SEMFREE]      = semFree;
+    systemCallVec[SYS_GETTIMEOFDAY] = gettimeofday;
+    systemCallVec[SYS_CPUTIME]      = cputime;
 
     /*
      * Create first user-level process and wait for it to finish.
@@ -360,6 +366,9 @@ void semPReal(int handle)
             BlockedSems[handle]++;
             MboxReceive(MboxTable[handle], NULL, 0);
             BlockedSems[handle]--;
+            if(SemTable[handle] < 0){
+                quit(0);
+            }
         }
         SemTable[handle]--;
     }
@@ -415,13 +424,10 @@ void semFree(systemArgs * args)
         args->arg4 = (void *) -1;
         return;
     }
-    if (BlockedSems[handle] == 0){
+    else {
         semCount--;
         args->arg4 = (void *) 0;
         semFreeReal(handle);
-    }
-    else {
-        //deal with the case where we have blocked process on our sem.
     }
     setToUserMode();
 } /* semFree */
@@ -434,8 +440,10 @@ void semFree(systemArgs * args)
    -------------------------------------------------------------------- */
 void semFreeReal(int handle)
 {
-
     SemTable[handle] = -1;
+    while (BlockedSems[handle] > 0){
+        MboxCondSend(MboxTable[handle], NULL, 0);
+    }
 } /* semFreeReal */
 
 /* getpid2----------------------------------------------------------------
@@ -474,6 +482,52 @@ void setToKernelMode(){
     int check = USLOSS_PsrSet(newMode);
 } /* setToKernelMode */
 
+/* gettimeofday-----------------------------------------------------------
+   Name - gettimeofday
+   Purpose - to get the time of day from gtodReal and return it as arg1
+   Parameters - systemargs
+   Returns - none
+   -------------------------------------------------------------------- */
+void gettimeofday(systemArgs * args)
+{
+    args->arg1 = (void *) gettimeofdayReal();
+    setToUserMode();
+} /* gettimeofday */
 
+/* gettimeofdayReal-------------------------------------------------------
+   Name - gettimeofdayReal
+   Purpose - to get the time of day and return it as an int.
+   Parameters - none
+   Returns - the time of day as an int
+   -------------------------------------------------------------------- */
+int gettimeofdayReal()
+{
+    int status;
+    int a = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, 0, &status);
+    return status;
+} /* gettimeofdayReal */
+
+/* cputime----------------------------------------------------------------
+   Name - cputime
+   Purpose - to get the currently running time of the current process
+   Parameters - systemargs
+   Returns - none
+   -------------------------------------------------------------------- */
+void cputime(systemArgs * args)
+{
+    args->arg1 = (void *) cputimeReal();
+    setToUserMode();
+} /* cputime */
+
+/* cputimeReal------------------------------------------------------------
+   Name - cputimeReal
+   Purpose - gets the current time of the current process
+   Parameters - none
+   Returns - current time of the current process
+   -------------------------------------------------------------------- */
+int cputimeReal()
+{
+    return readtime();
+} /* cputimeReal */
 
 

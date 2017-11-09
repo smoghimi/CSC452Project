@@ -1,0 +1,47 @@
+phase4.c: In function ‘start3’:
+phase4.c:61:42: error: ‘termwrite’ undeclared (first use in this function)
+  systemCallVec[SYS_TERMWRITE] = (void *) termwrite;
+                                          ^
+phase4.c:61:42: note: each undeclared identifier is reported only once for each function it appears in
+phase4.c:121:6: warning: variable ‘pid’ set but not used [-Wunused-but-set-variable]
+  int pid = spawnReal("start4", start4, NULL, 4 * USLOSS_MIN_STACK, 3);
+      ^
+phase4.c: In function ‘termwrite’:
+phase4.c:378:29: warning: implicit declaration of function ‘termwriteReal’ [-Wimplicit-function-declaration]
+                 int write = termwriteReal(buff, size, unit);
+                             ^
+phase4.c: In function ‘diskread’:
+phase4.c:459:9: warning: unused variable ‘dbuff’ [-Wunused-variable]
+  void * dbuff = args->arg1;
+         ^
+phase4.c: In function ‘diskwrite’:
+phase4.c:597:9: warning: unused variable ‘dbuff’ [-Wunused-variable]
+  void * dbuff = args->arg1;
+         ^
+phase4.c: In function ‘Write’:
+phase4.c:906:3: warning: implicit declaration of function ‘Seek’ [-Wimplicit-function-declaration]
+   Seek(request->track, request->unit);
+   ^
+phase4.c:918:16: warning: assignment makes pointer from integer without a cast [-Wint-conversion]
+    devReq.reg1 = request->first++;
+                ^
+phase4.c: In function ‘Read’:
+phase4.c:969:16: warning: assignment makes pointer from integer without a cast [-Wint-conversion]
+    devReq.reg1 = request->first++;
+                ^
+phase4.c: At top level:
+phase4.c:993:6: warning: conflicting types for ‘Seek’
+ void Seek(int track, int unit)
+      ^
+phase4.c:906:3: note: previous implicit declaration of ‘Seek’ was here
+   Seek(request->track, request->unit);
+   ^
+phase4.c: In function ‘Seek’:
+phase4.c:998:14: warning: assignment makes pointer from integer without a cast [-Wint-conversion]
+  devReq.reg1 = track;
+              ^
+phase4.c: At top level:
+phase4.c:802:12: warning: ‘TermDriver’ defined but not used [-Wunused-function]
+ static int TermDriver(char *arg)
+            ^
+make: *** [phase4.o] Error 1

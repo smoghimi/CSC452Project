@@ -1,0 +1,30 @@
+start4(): Spawn one child.
+Child0(): start
+Child0(): buffer read from term0 ==== zero: first line
+Child0(): buffer read from term0 ==== zero: second line
+Child0(): buffer read from term0 ==== zero: third line, longer than previous ones
+Child0(): buffer read from term0 ==== zero: fourth line, will be 80 characters long when I get through typing it in.
+Child0(): buffer read from term0 ==== zero: fifth line
+Child0(): buffer read from term0 ==== zero: sixth line
+Child0(): buffer read from term0 ==== zero: seventh line
+Child0(): buffer read from term0 ==== zero: eighth line
+Child0(): buffer read from term0 ==== zero: ninth line
+Child0(): buffer read from term0 ==== zero: tenth line
+Child0(): done
+start4(): done.
+All processes completed.
+
+term0.out
+zero: first line
+zero: second line
+zero: third line, longer than previous ones
+zero: fourth line, will be 80 characters long when I get through typing it in.
+zero: fifth line
+zero: sixth line
+zero: seventh line
+zero: eighth line
+zero: ninth line
+zero: tenth line
+term1.out
+term2.out
+term3.out

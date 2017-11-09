@@ -1,0 +1,51 @@
+start4: reading a character from terminal 3
+start4(): Spawn 4 children. Each child writes one line
+          to each terminal
+start4(): calling Wait
+Child(0): started
+Child(1): started
+Child(2): started
+Child(3): started
+Child(0): done with write #0
+Child(1): done with write #0
+Child(0): done with write #1
+Child(1): done with write #1
+Child(0): done with write #2
+Child(2): done with write #0
+Child(1): done with write #2
+Child(0): done with write #3
+Child(0): terminating
+Child(3): done with write #0
+Child(2): done with write #1
+Child(1): done with write #3
+Child(1): terminating
+Child(3): done with write #1
+Child(2): done with write #2
+Child(3): done with write #2
+Child(2): done with write #3
+Child(2): terminating
+Child(3): done with write #3
+Child(3): terminating
+start4(): calling Terminate
+All processes completed.
+
+term0.out
+Child 0: A Something interesting to print here...zero
+Child 1: A Something interesting to print here...one
+Child 2: A Something interesting to print here...second
+Child 3: A Something interesting to print here...three
+term1.out
+Child 0: A Something interesting to print here...zero
+Child 1: A Something interesting to print here...one
+Child 2: A Something interesting to print here...second
+Child 3: A Something interesting to print here...three
+term2.out
+Child 0: A Something interesting to print here...zero
+Child 1: A Something interesting to print here...one
+Child 2: A Something interesting to print here...second
+Child 3: A Something interesting to print here...three
+term3.out
+Child 0: A Something interesting to print here...zero
+Child 1: A Something interesting to print here...one
+Child 2: A Something interesting to print here...second
+Child 3: A Something interesting to print here...three

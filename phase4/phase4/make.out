@@ -1,0 +1,94 @@
+phase4.c: In function ‘start3’:
+phase4.c:33:18: warning: implicit declaration of function ‘semcreateReal’ [-Wimplicit-function-declaration]
+     semRunning = semcreateReal(0);
+                  ^
+phase4.c:44:5: warning: implicit declaration of function ‘sempReal’ [-Wimplicit-function-declaration]
+     sempReal(semRunning);
+     ^
+phase4.c:75:11: warning: implicit declaration of function ‘spawnReal’ [-Wimplicit-function-declaration]
+     pid = spawnReal("start4", start4, NULL, 4 * USLOSS_MIN_STACK, 3);
+           ^
+phase4.c:76:11: warning: implicit declaration of function ‘waitReal’ [-Wimplicit-function-declaration]
+     pid = waitReal(&status);
+           ^
+phase4.c: In function ‘ClockDriver’:
+phase4.c:95:5: warning: implicit declaration of function ‘semvReal’ [-Wimplicit-function-declaration]
+     semvReal(semRunning);
+     ^
+phase4.c:96:5: warning: ignoring return value of ‘USLOSS_PsrSet’, declared with attribute warn_unused_result [-Wunused-result]
+     USLOSS_PsrSet(USLOSS_PsrGet() | USLOSS_PSR_CURRENT_INT);
+     ^
+phase4.c:109:1: warning: control reaches end of non-void function [-Wreturn-type]
+ }
+ ^
+libuser.c: In function ‘Spawn’:
+libuser.c:50:19: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+     sysArg.arg3 = (void *) stack_size;
+                   ^
+libuser.c:51:19: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+     sysArg.arg4 = (void *) priority;
+                   ^
+libuser.c:56:12: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+     *pid = (int) sysArg.arg1;
+            ^
+libuser.c:57:12: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+     return (int) sysArg.arg4;
+            ^
+libuser.c: In function ‘Wait’:
+libuser.c:83:12: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+     *pid = (int) sysArg.arg1;
+            ^
+libuser.c:84:15: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+     *status = (int) sysArg.arg2;
+               ^
+libuser.c:85:12: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+     return (int) sysArg.arg4;
+            ^
+libuser.c: In function ‘Terminate’:
+libuser.c:107:19: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+     sysArg.arg1 = (void *) status;
+                   ^
+libuser.c: In function ‘SemCreate’:
+libuser.c:127:19: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+     sysArg.arg1 = (void *) value;
+                   ^
+libuser.c:131:16: warning: assignment makes integer from pointer without a cast [-Wint-conversion]
+     *semaphore = sysArg.arg1;
+                ^
+libuser.c:132:12: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+     return (int) sysArg.arg4;
+            ^
+libuser.c: In function ‘SemP’:
+libuser.c:150:19: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+     sysArg.arg1 = (void *) semaphore;
+                   ^
+libuser.c:154:21: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+     int something = (int) sysArg.arg4;
+                     ^
+libuser.c: In function ‘SemV’:
+libuser.c:173:19: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+     sysArg.arg1 = (void *) semaphore;
+                   ^
+libuser.c:177:21: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+     int something = (int) sysArg.arg4;
+                     ^
+libuser.c: In function ‘SemFree’:
+libuser.c:196:20: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+     sysArgs.arg1 = (void *) semaphore;
+                    ^
+libuser.c:200:21: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+     int something = (int) sysArgs.arg4;
+                     ^
+libuser.c: In function ‘GetTimeofDay’:
+libuser.c:221:12: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+     *tod = (int) sysArgs.arg1;
+            ^
+libuser.c: In function ‘CPUTime’:
+libuser.c:241:10: warning: assignment makes integer from pointer without a cast [-Wint-conversion]
+     *cpu = sysArgs.arg1;
+          ^
+libuser.c: In function ‘GetPID’:
+libuser.c:262:10: warning: assignment makes integer from pointer without a cast [-Wint-conversion]
+     *pid = sysArgs.arg1;
+          ^
+ar: creating libphase4.a

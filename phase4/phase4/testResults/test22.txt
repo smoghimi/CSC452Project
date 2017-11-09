@@ -1,0 +1,76 @@
+start4(): Spawn four children.
+Child0(): start
+Child1(): start
+Child2(): start
+Child3(): start
+buffer written one: first line
+ 
+buffer written two: first line
+ 
+buffer written zero: first line
+ 
+buffer written three: first line
+ 
+buffer written one: second line
+ 
+buffer written two: second line
+ 
+buffer written zero: second line
+ 
+buffer written three: second line
+ 
+buffer written one: third line, longer than previous ones
+ 
+buffer written two: third line, longer than previous ones
+ 
+buffer written zero: third line, longer than previous ones
+ 
+buffer written three: third line, longer than previous ones
+ 
+buffer written one: fourth line, will be 80 characters long when I get through typing it in..
+ 
+buffer written two: fourth line, will be 80 characters long when I get through typing it in..
+ 
+buffer written zero: fourth line, will be 80 characters long when I get through typing it in.
+ 
+buffer written three: fourth line, will be 80 characters long when I get through typing it in
+ 
+buffer written one: fifth line
+ 
+buffer written two: fifth line
+ 
+buffer written zero: fifth line
+ 
+buffer written three: fifth line
+ 
+Child1(): done
+Child2(): done
+Child0(): done
+Child3(): done
+start4(): done.
+All processes completed.
+
+term0.out
+zero: first line
+zero: second line
+zero: third line, longer than previous ones
+zero: fourth line, will be 80 characters long when I get through typing it in.
+zero: fifth line
+term1.out
+one: first line
+one: second line
+one: third line, longer than previous ones
+one: fourth line, will be 80 characters long when I get through typing it in..
+one: fifth line
+term2.out
+two: first line
+two: second line
+two: third line, longer than previous ones
+two: fourth line, will be 80 characters long when I get through typing it in..
+two: fifth line
+term3.out
+three: first line
+three: second line
+three: third line, longer than previous ones
+three: fourth line, will be 80 characters long when I get through typing it in
+three: fifth line

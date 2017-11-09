@@ -1,0 +1,7 @@
+start4(): 3 tests of invalid requests from terminals
+start4(): Read negative number of chars from term 1
+start4(): Read from invalid term 5
+start4(): Read zero chars from term 0
+start4(): After reading 0 characters from terminal 0, bBuffer contains 'abcdefghijklm'
+start4(): Done with test of illegal terminal parameters
+All processes completed.
